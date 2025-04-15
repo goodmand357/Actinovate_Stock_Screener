@@ -1,9 +1,9 @@
 # ---------- FRONTEND ----------
 FROM node:18 AS frontend
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
+COPY actinovate-frontend-main/package*.json ./
 RUN npm install
-COPY frontend/ .
+COPY actinovate-frontend-main/ .
 RUN npm run build
 
 # ---------- BACKEND ----------
