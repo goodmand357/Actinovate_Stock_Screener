@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockWise - Portfolio Tracker</title>
+  <link rel="stylesheet" href="stockwise.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">StockWise</h2>
+        <button id="toggleSidebar" class="toggle-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="sidebar-item">
+          <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#screener" class="sidebar-item active">
+          <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <span>Screener</span>
+        </a>
+        <a href="#stocks" class="sidebar-item">
+          <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 4-4 4 4 4-4 4 4"></path><path d="M3 15h18"></path><path d="M3 19h18"></path></svg>
+          <span>Stocks</span>
+        </a>
+        <a href="#portfolio" class="sidebar-item">
+          <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span>Portfolio</span>
+        </a>
+      </nav>
+    </div>
+    
+    <div class="main-content" id="mainContent">
+      <!-- Screener Page -->
+      <div class="page-container" id="screenerPage">
+        <div class="header-section">
+          <div>
+            <h1 class="page-title">Stock Screener</h1>
+            <p class="subtitle">Find and filter stocks based on your criteria</p>
+          </div>
+          <div class="header-buttons">
+            <button class="filter-btn">
+              <svg class="filter-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              Filters
+            </button>
+            <button class="export-btn">
+              <svg class="export-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Export
+            </button>
+          </div>
+        </div>
+
+        <div class="search-filter-container">
+          <div class="search-container">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" id="stockSearch" class="search-input" placeholder="Search by symbol or company name...">
+          </div>
+          <div class="sort-dropdown">
+            <select id="sortDropdown" class="sort-select">
+              <option value="marketCapDesc">Market Cap (High to Low)</option>
+              <option value="marketCapAsc">Market Cap (Low to High)</option>
+              <option value="priceDesc">Price (High to Low)</option>
+              <option value="priceAsc">Price (Low to High)</option>
+              <option value="changeDesc">Change % (High to Low)</option>
+              <option value="changeAsc">Change % (Low to High)</option>
+              <option value="peDesc">P/E Ratio (High to Low)</option>
+              <option value="peAsc">P/E Ratio (Low to High)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Applied Filters Section -->
+        <div class="applied-filters" id="appliedFilters">
+          <div class="filter-chip">
+            <span>Large Cap ($10B-$200B)</span>
+            <button class="chip-remove">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
+          <div class="filter-chip">
+            <span>Technology</span>
+            <button class="chip-remove">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
+          <div class="filter-chip">
+            <span>P/E: 0-50</span>
+            <button class="chip-remove">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
+          <button class="clear-filters">Clear all</button>
+        </div>
+        
+        <!-- Table Container -->
+        <div class="table-container">
+          <table class="stock-table">
+            <thead>
+              <tr>
+                <th class="sortable-header">
+                  <div class="sort-header">
+                    Symbol
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th>Name</th>
+                <th>Sector</th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    Price
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    Change %
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    Market Cap
+                    <svg class="sort-icon active desc" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    P/E
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    Div Yield
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+                <th class="sortable-header">
+                  <div class="sort-header text-right">
+                    Volume
+                    <svg class="sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="screenerTableBody">
+              <!-- Stock rows will be generated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="results-info">
+          <p>Showing <span id="resultsCount">10</span> results</p>
+        </div>
+      </div>
+      
+      <!-- Filter Panel (Initially Hidden) -->
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-header">
+          <h3>Filters</h3>
+          <button class="close-filter-panel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+        </div>
+        
+        <div class="filter-section">
+          <h4>Market Cap</h4>
+          <select class="filter-select" id="marketCapFilter">
+            <option value="any">Any</option>
+            <option value="micro">Micro ($50M-$300M)</option>
+            <option value="small">Small ($300M-$2B)</option>
+            <option value="mid">Mid ($2B-$10B)</option>
+            <option value="large" selected>Large ($10B-$200B)</option>
+            <option value="mega">Mega (>$200B)</option>
+          </select>
+        </div>
+        
+        <div class="filter-section">
+          <h4>Sector</h4>
+          <select class="filter-select" id="sectorFilter">
+            <option value="any">Any</option>
+            <option value="tech" selected>Technology</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="financials">Financials</option>
+            <option value="consumer">Consumer</option>
+            <option value="industrials">Industrials</option>
+            <option value="energy">Energy</option>
+            <option value="utilities">Utilities</option>
+            <option value="materials">Materials</option>
+            <option value="real-estate">Real Estate</option>
+            <option value="telecom">Telecommunications</option>
+          </select>
+        </div>
+        
+        <div class="filter-section">
+          <h4>P/E Ratio: <span id="peRangeValue">0-50</span></h4>
+          <div class="range-slider-container">
+            <input type="range" min="0" max="100" value="50" class="range-slider" id="peRatioSlider">
+          </div>
+        </div>
+        
+        <div class="filter-section">
+          <h4>Dividend</h4>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="radio" id="divAny" name="dividend" value="any" checked>
+              <label for="divAny">Any</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="radio" id="divYes" name="dividend" value="yes">
+              <label for="divYes">Pays Dividend</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="radio" id="divNo" name="dividend" value="no">
+              <label for="divNo">No Dividend</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Added Alert Frequency section -->
+        <div class="filter-section">
+          <h4>Alert Frequency</h4>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="radio" id="freqRealtime" name="alertFrequency" value="realtime" checked>
+              <label for="freqRealtime">Real-time</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="radio" id="freqDaily" name="alertFrequency" value="daily">
+              <label for="freqDaily">Daily</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="radio" id="freqWeekly" name="alertFrequency" value="weekly">
+              <label for="freqWeekly">Weekly</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="filter-actions">
+          <button class="reset-btn">Reset</button>
+          <button class="apply-btn">Apply Filters</button>
+        </div>
+      </div>
+      
+      <!-- Hidden Dashboard Page -->
+      <div class="page-container hidden" id="dashboardPage">
+        <!-- Dashboard content will be inserted here -->
+      </div>
+      
+      <!-- Hidden Portfolio Page -->
+      <div class="page-container hidden" id="portfolioPage">
+        <!-- Portfolio content will be inserted here -->
+      </div>
+      
+      <!-- Hidden Stocks Page -->
+      <div class="page-container hidden" id="stocksPage">
+        <!-- Stocks content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <div id="mobileToggle" class="mobile-toggle">
+    <button>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"></path></svg>
+    </button>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <script src="stockwise.js"></script>
+</body>
+</html>

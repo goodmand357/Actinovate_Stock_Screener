@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .filter-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium 
+    bg-secondary text-secondary-foreground border border-transparent 
+    transition-all duration-300 hover:border-primary/20 cursor-pointer;
+  }
+
+  .filter-chip.active {
+    @apply bg-primary/10 border-primary/20;
+  }
+
+  .stat-card {
+    @apply bg-card border border-border rounded-lg p-5 overflow-hidden
+    transition-all duration-300 ease-in-out hover:shadow-sm;
+  }
+
+  .shimmer-effect {
+    @apply bg-gradient-to-r from-transparent via-muted/50 to-transparent bg-[length:200%_100%] animate-shimmer;
+  }
+
+  .table-container {
+    @apply border border-border rounded-lg overflow-hidden;
+  }
+
+  .stock-table {
+    @apply w-full border-collapse;
+  }
+
+  .stock-table th {
+    @apply text-sm font-medium text-left py-3 px-4 bg-muted text-muted-foreground cursor-pointer hover:bg-muted/80;
+  }
+
+  .stock-table td {
+    @apply py-3 px-4 border-b border-border;
+  }
+
+  .stock-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .stock-table tr:hover {
+    @apply bg-secondary/50;
+  }
+
+  .profit {
+    @apply text-success;
+  }
+
+  .loss {
+    @apply text-destructive;
+  }
+
+  /* Screener specific styles */
+  .screener-page {
+    @apply space-y-6;
+  }
+
+  .header-section {
+    @apply flex justify-between items-center pb-4;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight;
+  }
+
+  .subtitle {
+    @apply text-muted-foreground mt-1;
+  }
+
+  .screener-layout {
+    @apply flex flex-col lg:flex-row gap-6;
+  }
+
+  .filter-sidebar {
+    @apply bg-card border border-border rounded-lg overflow-hidden lg:w-72 shrink-0
+    transition-all duration-300 ease-in-out;
+  }
+
+  .filter-sidebar.closed {
+    @apply hidden lg:block lg:w-0 lg:border-0 lg:opacity-0 overflow-hidden;
+  }
+
+  .filter-sidebar.open {
+    @apply block lg:opacity-100 lg:w-72;
+  }
+
+  .filter-sidebar-header {
+    @apply flex items-center justify-between p-4 border-b border-border;
+  }
+
+  .filter-sidebar-content {
+    @apply p-4 space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto;
+  }
+
+  .filter-group {
+    @apply space-y-2;
+  }
+
+  .filter-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .filter-input {
+    @apply w-full h-9 px-3 py-1 text-sm;
+  }
+
+  .filter-row {
+    @apply flex gap-2;
+  }
+
+  .filter-input-half {
+    @apply w-1/2 h-9 px-3 py-1 text-sm;
+  }
+
+  .filter-select {
+    @apply w-full h-9 px-3 py-1 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-input;
+  }
+
+  .apply-filters-btn {
+    @apply w-full bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .results-section {
+    @apply flex-1 space-y-4;
+  }
+
+  .results-header {
+    @apply flex justify-between items-center pb-2 text-sm text-muted-foreground;
+  }
+
+  .mobile-filter-toggle {
+    @apply block lg:hidden;
+  }
+
+  .export-btn {
+    @apply flex items-center gap-2;
+  }
+
+  .th-content {
+    @apply flex items-center gap-1;
+  }
+
+  /* Removing the circular dependency by not using @apply for these classes */
+  .th-content-end {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .th-content-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sort-icon {
+    @apply opacity-40 group-hover:opacity-100;
+  }
+
+  .stock-row {
+    @apply hover:bg-muted/30 transition-colors;
+  }
+}
