@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from services import get_full_stock_data
+import os
 
 app = Flask(__name__, static_folder='../actinovate-frontend-main/dist', static_url_path='/')
 CORS(app)
@@ -22,5 +23,6 @@ def financial_data():
 def ping():
     return "Backend is alive"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Use Railway-assigned port if it exists
+    app.run(host="0.0.0.0", port=port, debug=False)
