@@ -1,3 +1,4 @@
+from yahoo_scraper import scrape_yahoo_news
 import requests
 from yahooquery import Ticker
 import config
