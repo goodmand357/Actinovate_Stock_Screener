@@ -7,3 +7,4 @@ xgboost
 shap
 scikit-learn
 python-dotenv
+beautifulsoup4
