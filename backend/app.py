@@ -4,7 +4,7 @@ import os
 
 # Import your service function(s)
 from services import get_full_stock_data
-from stock_data import get_financial_data  # optional, if you're using it
+from main import get_financial_data  # optional, if you're using it
 
 app = Flask(__name__, static_folder="../actinovate-frontend-main/dist", static_url_path="/")
 CORS(app)
