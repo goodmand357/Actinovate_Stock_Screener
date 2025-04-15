@@ -1,184 +1,130 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, BarChart2, Layers } from 'lucide-react';
 
-// Financial metrics with expanded data
-const financialData = {
-  // Company Info
-  tickerName: "AAPL",
-  price: "$182.68",
-  marketCap: "$2.89T",
-  sector: "Technology",
-  industry: "Consumer Electronics",
-  foundedYear: "1976",
-  
-  // Core Financials
-  revenue: "$394.3B",
-  netProfit: "$96.9B",
-  netProfitMargin: "24.6%",
-  peRatio: "28.5",
-  priceToSales: "7.8",
-  dividendYield: "0.48%",
-  
-  // Growth
-  revenueGrowthY1: "8.4%",
-  revenueGrowthY2: "6.9%",
-  revenueGrowthY3: "5.5%",
-  
-  // Historical Revenue
-  revenue2023: "$383.3B",
-  revenue2024: "$394.3B",
-  revenue2025: "$412.6B (est.)",
-  
-  // EPS
-  basicEPS: "$6.13",
-  dilutedEPS: "$6.08",
-  
-  // Dates
-  nextReportDate: "Apr 25, 2024"
-};
-
 const FinancialData: React.FC = () => {
+  const [financialData, setFinancialData] = useState<any>(null);
+  const [ticker, setTicker] = useState("AAPL");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/financial-data?symbol=${ticker}`)
+      .then(res => res.json())
+      .then(data => {
+        setFinancialData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching financial data:", err);
+        setLoading(false);
+      });
+  }, [ticker]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const input = (e.target as HTMLFormElement).ticker.value.trim().toUpperCase();
+    if (input) setTicker(input);
+  };
+
   return (
     <div className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <form onSubmit={handleSearch} className="mb-6 flex flex-wrap gap-2">
+        <input
+          name="ticker"
+          placeholder="Enter a stock symbol (e.g. MSFT)"
+          className="p-2 border rounded dark:bg-slate-700 dark:text-white"
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Search
+        </button>
+      </form>
+
       <h3 className="text-xl font-bold mb-6 dark:text-white flex items-center gap-2">
         <DollarSign className="h-5 w-5 text-green-500" />
-        Financial Information
+        Financial Information for {ticker}
       </h3>
-      
-      <div className="mb-6">
-        <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
-          <Layers className="h-4 w-4 text-blue-400" />
-          Company Overview
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Ticker</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.tickerName}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Price</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.price}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Sector</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.sector}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Industry</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.industry}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Founded</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.foundedYear}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Market Cap</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.marketCap}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Next Report</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.nextReportDate}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mb-6">
-        <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-purple-400" />
-          Revenue & Profit
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Revenue (TTM)</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenue}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Net Profit</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.netProfit}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Net Profit Margin</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.netProfitMargin}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">2023 Revenue</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenue2023}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">2024 Revenue</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenue2024}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">2025 Revenue (est.)</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenue2025}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mb-6">
-        <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-green-400" />
-          Growth Metrics
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Revenue Growth (YoY) - Y1</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenueGrowthY1}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Revenue Growth (YoY) - Y2</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenueGrowthY2}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Revenue Growth (YoY) - Y3</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.revenueGrowthY3}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-amber-400" />
-          Investor Metrics
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">P/E Ratio</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.peRatio}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Dividend Yield</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.dividendYield}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Basic EPS</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.basicEPS}</p>
-          </div>
-          
-          <div className="transition-transform duration-300 hover:scale-105">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Diluted EPS</p>
-            <p className="text-xl font-semibold dark:text-white">{financialData.dilutedEPS}</p>
-          </div>
-        </div>
-      </div>
+
+      {loading ? (
+        <p className="text-center text-gray-500 dark:text-white">Loading financial data...</p>
+      ) : financialData ? (
+        <>
+          {/* Company Overview */}
+          <Section title="Company Overview" icon={<Layers className="h-4 w-4 text-blue-400" />}>
+            <OverviewItem label="Ticker" value={financialData.ticker} />
+            <OverviewItem label="Price" value={`$${financialData.price?.toFixed(2)}`} />
+            <OverviewItem label="Sector" value={financialData.sector} />
+            <OverviewItem label="Industry" value={financialData.industry} />
+            <OverviewItem label="Founded" value={financialData.foundedYear || 'N/A'} />
+            <OverviewItem label="Market Cap" value={formatBillion(financialData.market_cap)} />
+            <OverviewItem label="Next Report" value={financialData.nextReportDate || 'N/A'} />
+          </Section>
+
+          {/* Revenue & Profit */}
+          <Section title="Revenue & Profit" icon={<BarChart2 className="h-4 w-4 text-purple-400" />}>
+            <OverviewItem label="Revenue (TTM)" value={formatBillion(financialData.revenue)} />
+            <OverviewItem label="Net Profit" value={formatBillion(financialData.net_profit)} />
+            <OverviewItem label="Net Profit Margin" value={financialData.netProfitMargin || 'N/A'} />
+            <OverviewItem label="2023 Revenue" value={financialData.revenue2023 || 'N/A'} />
+            <OverviewItem label="2024 Revenue" value={financialData.revenue2024 || 'N/A'} />
+            <OverviewItem label="2025 Revenue (est.)" value={financialData.revenue2025 || 'N/A'} />
+          </Section>
+
+          {/* Growth Metrics */}
+          <Section title="Growth Metrics" icon={<TrendingUp className="h-4 w-4 text-green-400" />}>
+            <OverviewItem label="Revenue Growth (YoY) - Y1" value={percent(financialData.revenue_growth_y1)} />
+            <OverviewItem label="Revenue Growth (YoY) - Y2" value={percent(financialData.revenue_growth_y2)} />
+            <OverviewItem label="Revenue Growth (YoY) - Y3" value={percent(financialData.revenue_growth_y3)} />
+          </Section>
+
+          {/* Investor Metrics */}
+          <Section title="Investor Metrics" icon={<DollarSign className="h-4 w-4 text-amber-400" />}>
+            <OverviewItem label="P/E Ratio" value={financialData.pe_ratio?.toFixed(2)} />
+            <OverviewItem label="Dividend Yield" value={percent(financialData.dividend_yield)} />
+            <OverviewItem label="Basic EPS" value={financialData.eps} />
+            <OverviewItem label="Diluted EPS" value={financialData.dilutedEPS || 'N/A'} />
+          </Section>
+        </>
+      ) : (
+        <p className="text-center text-red-500">No data found for "{ticker}".</p>
+      )}
     </div>
   );
 };
 
 export default FinancialData;
+
+// 🔧 Reusable Section wrapper
+const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
+  <div className="mb-6">
+    <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
+      {icon} {title}
+    </h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+      {children}
+    </div>
+  </div>
+);
+
+// 🔧 Reusable layout item
+const OverviewItem = ({ label, value }: { label: string; value: string }) => (
+  <div className="transition-transform duration-300 hover:scale-105">
+    <p className="text-gray-500 dark:text-gray-400 text-sm">{label}</p>
+    <p className="text-xl font-semibold dark:text-white">{value}</p>
+  </div>
+);
+
+// 💡 Formatting helpers
+const formatBillion = (value: number | undefined) => {
+  if (!value) return "N/A";
+  if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
+  return `$${(value / 1_000_000_000).toFixed(2)}B`;
+};
+
+const percent = (value: number | undefined) => {
+  if (value === null || value === undefined) return "N/A";
+  return `${(value * 100).toFixed(1)}%`;
+};
