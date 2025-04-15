@@ -1,34 +1,29 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-import os
-
-# Import your service function(s)
 from services import get_full_stock_data
-from main import get_financial_data  # optional, if you're using it
 
-app = Flask(__name__, static_folder="../actinovate-frontend-main/dist", static_url_path="/")
+app = Flask(__name__, static_folder='../actinovate-frontend-main/dist', static_url_path='/')
 CORS(app)
 
-@app.route("/")
-def index():
-    return send_from_directory(app.static_folder, "index.html")
+# Serve React frontend
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route("/<path:path>")
-def serve_static(path):
-    return send_from_directory(app.static_folder, path)
-
-@app.route("/stock", methods=["GET"])
-def stock():
-    symbol = request.args.get("symbol", "AAPL")
+# API route for financial data
+@app.route('/api/financial-data')
+def financial_data():
+    symbol = request.args.get('symbol', 'AAPL')
     data = get_full_stock_data(symbol)
     return jsonify(data)
 
-# Optional: Hook in the version from main.py if you're using that too
-@app.route("/financials", methods=["GET"])
-def financials():
-    symbol = request.args.get("symbol", "AAPL")
-    data = get_financial_data(symbol)
-    return jsonify(data)
+# Optional test route
+@app.route('/ping')
+def ping():
+    return "Backend is alive"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 
 if __name__ == "__main__":
     app.run(debug=True)
