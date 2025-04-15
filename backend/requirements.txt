@@ -1,0 +1,9 @@
+flask
+flask-cors
+requests
+yahooquery
+pandas
+xgboost
+shap
+scikit-learn
+python-dotenv
