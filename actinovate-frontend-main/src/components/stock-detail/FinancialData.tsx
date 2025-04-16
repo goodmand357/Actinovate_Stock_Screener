@@ -7,9 +7,11 @@ const FinancialData: React.FC = () => {
   const [ticker, setTicker] = useState("AAPL");
   const [loading, setLoading] = useState(true);
 
+  const baseUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/financial-data?symbol=${ticker}`)
+    fetch(`${baseUrl}/api/financial-data?symbol=${ticker}`)
       .then(res => res.json())
       .then(data => {
         setFinancialData(data);
@@ -52,7 +54,6 @@ const FinancialData: React.FC = () => {
         <p className="text-center text-gray-500 dark:text-white">Loading financial data...</p>
       ) : financialData ? (
         <>
-          {/* Company Overview */}
           <Section title="Company Overview" icon={<Layers className="h-4 w-4 text-blue-400" />}>
             <OverviewItem label="Ticker" value={financialData.ticker} />
             <OverviewItem label="Price" value={`$${financialData.price?.toFixed(2)}`} />
@@ -63,7 +64,6 @@ const FinancialData: React.FC = () => {
             <OverviewItem label="Next Report" value={financialData.nextReportDate || 'N/A'} />
           </Section>
 
-          {/* Revenue & Profit */}
           <Section title="Revenue & Profit" icon={<BarChart2 className="h-4 w-4 text-purple-400" />}>
             <OverviewItem label="Revenue (TTM)" value={formatBillion(financialData.revenue)} />
             <OverviewItem label="Net Profit" value={formatBillion(financialData.net_profit)} />
@@ -73,14 +73,12 @@ const FinancialData: React.FC = () => {
             <OverviewItem label="2025 Revenue (est.)" value={financialData.revenue2025 || 'N/A'} />
           </Section>
 
-          {/* Growth Metrics */}
           <Section title="Growth Metrics" icon={<TrendingUp className="h-4 w-4 text-green-400" />}>
             <OverviewItem label="Revenue Growth (YoY) - Y1" value={percent(financialData.revenue_growth_y1)} />
             <OverviewItem label="Revenue Growth (YoY) - Y2" value={percent(financialData.revenue_growth_y2)} />
             <OverviewItem label="Revenue Growth (YoY) - Y3" value={percent(financialData.revenue_growth_y3)} />
           </Section>
 
-          {/* Investor Metrics */}
           <Section title="Investor Metrics" icon={<DollarSign className="h-4 w-4 text-amber-400" />}>
             <OverviewItem label="P/E Ratio" value={financialData.pe_ratio?.toFixed(2)} />
             <OverviewItem label="Dividend Yield" value={percent(financialData.dividend_yield)} />
@@ -97,7 +95,7 @@ const FinancialData: React.FC = () => {
 
 export default FinancialData;
 
-// 🔧 Reusable Section wrapper
+// 🔧 Section wrapper
 const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
   <div className="mb-6">
     <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
@@ -109,7 +107,7 @@ const Section = ({ title, icon, children }: { title: string; icon: React.ReactNo
   </div>
 );
 
-// 🔧 Reusable layout item
+// 🔧 Overview Item
 const OverviewItem = ({ label, value }: { label: string; value: string }) => (
   <div className="transition-transform duration-300 hover:scale-105">
     <p className="text-gray-500 dark:text-gray-400 text-sm">{label}</p>
@@ -117,7 +115,7 @@ const OverviewItem = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-// 💡 Formatting helpers
+// 🔧 Format Helpers
 const formatBillion = (value: number | undefined) => {
   if (!value) return "N/A";
   if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
