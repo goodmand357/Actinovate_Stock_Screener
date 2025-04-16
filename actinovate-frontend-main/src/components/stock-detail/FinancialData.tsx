@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, BarChart2, Layers } from 'lucide-react';
 
@@ -7,7 +6,8 @@ const FinancialData: React.FC = () => {
   const [ticker, setTicker] = useState("AAPL");
   const [loading, setLoading] = useState(true);
 
-  const baseUrl = import.meta.env.VITE_API_URL;
+  // 👇 Pull your API base URL from environment variables
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     setLoading(true);
@@ -95,7 +95,6 @@ const FinancialData: React.FC = () => {
 
 export default FinancialData;
 
-// 🔧 Section wrapper
 const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
   <div className="mb-6">
     <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
@@ -107,7 +106,6 @@ const Section = ({ title, icon, children }: { title: string; icon: React.ReactNo
   </div>
 );
 
-// 🔧 Overview Item
 const OverviewItem = ({ label, value }: { label: string; value: string }) => (
   <div className="transition-transform duration-300 hover:scale-105">
     <p className="text-gray-500 dark:text-gray-400 text-sm">{label}</p>
@@ -115,7 +113,6 @@ const OverviewItem = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-// 🔧 Format Helpers
 const formatBillion = (value: number | undefined) => {
   if (!value) return "N/A";
   if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
