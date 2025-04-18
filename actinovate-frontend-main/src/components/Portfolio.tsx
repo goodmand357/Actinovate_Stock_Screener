@@ -4,95 +4,38 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 
-// Mock portfolio data
-const portfolioStocks = [
-  {
-    symbol: "AAPL",
-    name: "Apple Inc.",
-    shares: 25,
-    avgPrice: 145.75,
-    currentPrice: 185.92,
-    totalValue: 4648.00,
-    profitLoss: 1004.25,
-    profitLossPercent: 27.56
-  },
-  {
-    symbol: "MSFT",
-    name: "Microsoft Corporation",
-    shares: 15,
-    avgPrice: 235.45,
-    currentPrice: 328.79,
-    totalValue: 4931.85,
-    profitLoss: 1400.10,
-    profitLossPercent: 39.64
-  },
-  {
-    symbol: "GOOGL",
-    name: "Alphabet Inc.",
-    shares: 10,
-    avgPrice: 1290.35,
-    currentPrice: 1450.16,
-    totalValue: 14501.60,
-    profitLoss: 1598.10,
-    profitLossPercent: 12.38
-  },
-  {
-    symbol: "AMZN",
-    name: "Amazon.com, Inc.",
-    shares: 8,
-    avgPrice: 2860.75,
-    currentPrice: 3120.50,
-    totalValue: 24964.00,
-    profitLoss: 2078.00,
-    profitLossPercent: 9.08
-  },
-  {
-    symbol: "TSLA",
-    name: "Tesla, Inc.",
-    shares: 20,
-    avgPrice: 235.65,
-    currentPrice: 273.58,
-    totalValue: 5471.60,
-    profitLoss: 758.60,
-    profitLossPercent: 16.09
-  },
-  {
-    symbol: "NVDA",
-    name: "NVIDIA Corporation",
-    shares: 12,
-    avgPrice: 210.25,
-    currentPrice: 435.10,
-    totalValue: 5221.20,
-    profitLoss: 2698.20,
-    profitLossPercent: 106.94
-  },
-  {
-    symbol: "META",
-    name: "Meta Platforms, Inc.",
-    shares: 18,
-    avgPrice: 195.72,
-    currentPrice: 297.80,
-    totalValue: 5360.40,
-    profitLoss: 1837.44,
-    profitLossPercent: 52.16
-  }
-];
-
-const portfolioSummary = {
-  totalValue: 35133.28,
-  totalProfitLoss: 7451.44,
-  dayChange: 523.80
-};
-
 const Portfolio = () => {
   const [loading, setLoading] = useState(true);
-  
+  const [portfolioStocks, setPortfolioStocks] = useState([]);
+  const [portfolioSummary, setPortfolioSummary] = useState({
+    totalValue: 0,
+    totalProfitLoss: 0,
+    dayChange: 0
+  });
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchPortfolio = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/api/portfolio`);
+        const data = await response.json();
+
+        setPortfolioStocks(data.stocks || []);
+        setPortfolioSummary({
+          totalValue: data.totalValue || 0,
+          totalProfitLoss: data.totalProfitLoss || 0,
+          dayChange: data.dayChange || 0
+        });
+      } catch (error) {
+        console.error("Error fetching portfolio:", error);
+        toast.error("Failed to load portfolio.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPortfolio();
   }, []);
 
   const formatCurrency = (value) => {
@@ -124,7 +67,7 @@ const Portfolio = () => {
           Add Position
         </Button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="stat-card">
           <div className="text-sm text-muted-foreground mb-2">Total Value</div>
@@ -155,7 +98,7 @@ const Portfolio = () => {
           )}
         </div>
       </div>
-      
+
       <div className="table-container">
         <table className="stock-table">
           <thead>
@@ -172,7 +115,6 @@ const Portfolio = () => {
           </thead>
           <tbody>
             {loading ? (
-              // Skeleton loading state
               Array.from({ length: 5 }).map((_, index) => (
                 <tr key={index}>
                   {Array.from({ length: 8 }).map((_, cellIndex) => (
