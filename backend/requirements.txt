@@ -8,3 +8,4 @@ shap
 scikit-learn
 python-dotenv
 beautifulsoup4
+yfinance
