@@ -147,6 +147,54 @@ const Screener = () => {
             </Alert>
           )}
 
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div>
+    <label className="block text-sm font-medium text-muted-foreground mb-1">Max P/E Ratio</label>
+    <Input
+      type="number"
+      value={filters.peMax}
+      onChange={(e) => setFilters({ ...filters, peMax: e.target.value })}
+      placeholder="e.g. 25"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-muted-foreground mb-1">Min Dividend Yield (%)</label>
+    <Input
+      type="number"
+      value={filters.dividendMin}
+      onChange={(e) => setFilters({ ...filters, dividendMin: e.target.value })}
+      placeholder="e.g. 1.5"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-muted-foreground mb-1">Max RSI</label>
+    <Input
+      type="number"
+      value={filters.rsiMax}
+      onChange={(e) => setFilters({ ...filters, rsiMax: e.target.value })}
+      placeholder="e.g. 70"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-muted-foreground mb-1">Sector</label>
+    <select
+      className="w-full border rounded px-3 py-2 text-sm"
+      value={filters.sector}
+      onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
+    >
+      <option value="All">All</option>
+      <option value="Technology">Technology</option>
+      <option value="Healthcare">Healthcare</option>
+      <option value="Financial Services">Financial Services</option>
+      <option value="Consumer Cyclical">Consumer Cyclical</option>
+      <option value="Energy">Energy</option>
+    </select>
+  </div>
+</div>
+          
           <div className="table-container overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
