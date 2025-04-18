@@ -7,11 +7,13 @@ const Stocks = () => {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     if (!searchQuery) return;
 
     setLoading(true);
-    fetch(`/api/financial-data?symbol=${searchQuery.toUpperCase()}`)
+    fetch(`${baseUrl}/api/financial-data?symbol=${searchQuery.toUpperCase()}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.ticker) {
