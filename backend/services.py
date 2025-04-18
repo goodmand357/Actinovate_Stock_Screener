@@ -1,6 +1,6 @@
 from yahoo_scraper import scrape_yahoo_news
 import requests
-from yahooquery import Ticker
+import yfinance as yf
 import config
 
 # ============================
@@ -64,41 +64,41 @@ def get_technical_indicators(symbol):
         return {}
 
 # ============================
-# Fallback: Yahoo Finance via yahooquery
+# Fallback: Yahoo Finance via yfinance
 # ============================
 def get_from_yahoo(symbol):
     try:
-        stock = Ticker(symbol)
-        modules = stock.get_modules(["summaryDetail", "assetProfile", "financialData"])
-        summary = modules.get(symbol, {}).get("summaryDetail", {})
-        profile = modules.get(symbol, {}).get("assetProfile", {})
-        financial = modules.get(symbol, {}).get("financialData", {})
-        income_stmt = stock.income_statement(trailing=True)
+        stock = yf.Ticker(symbol)
+        info = stock.info
+
+        financials = stock.financials
+        revenue_growth = [None, None, None]
 
         try:
-            rev = income_stmt["TotalRevenue"][:4]
-            rev = rev.reset_index(drop=True)
+            rev_series = stock.financials.loc["Total Revenue"]
+            rev = rev_series.iloc[:4].values
             revenue_growth = [(rev[i] - rev[i+1]) / rev[i+1] * 100 for i in range(3)]
         except:
-            revenue_growth = [None, None, None]
+            pass
 
         return {
-            "price": summary.get("regularMarketPrice"),
-            "pe_ratio": summary.get("trailingPE"),
-            "eps": financial.get("epsTrailingTwelveMonths"),
-            "dividend_yield": summary.get("dividendYield"),
-            "sector": profile.get("sector"),
-            "industry": profile.get("industry"),
-            "market_cap": summary.get("marketCap"),
-            "revenue": financial.get("totalRevenue"),
-            "net_profit": financial.get("netIncomeToCommon"),
-            "eps_growth_yoy": financial.get("earningsQuarterlyGrowth"),
-            "revenue_growth_yoy": financial.get("revenueGrowth"),
+            "price": info.get("currentPrice"),
+            "pe_ratio": info.get("trailingPE"),
+            "eps": info.get("trailingEps"),
+            "dividend_yield": info.get("dividendYield"),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "market_cap": info.get("marketCap"),
+            "revenue": info.get("totalRevenue"),
+            "net_profit": info.get("netIncomeToCommon"),
+            "eps_growth_yoy": info.get("earningsQuarterlyGrowth"),
+            "revenue_growth_yoy": info.get("revenueGrowth"),
             "revenue_growth_y1": revenue_growth[0],
             "revenue_growth_y2": revenue_growth[1],
             "revenue_growth_y3": revenue_growth[2],
         }
-    except:
+    except Exception as e:
+        print(f"Error in get_from_yahoo for {symbol}: {e}")
         return {}
 
 # ============================
