@@ -41,25 +41,33 @@ const Screener = () => {
   const [alertThreshold, setAlertThreshold] = useState('5');
   const [alertFrequency, setAlertFrequency] = useState<'realtime' | 'daily' | 'weekly'>('realtime');
 
+  const [filters, setFilters] = useState({
+  peMax: '40',
+  dividendMin: '0',
+  rsiMax: '80',
+  sector: 'All'
+});
+
   const fetchScreener = async () => {
     setLoading(true);
     try {
       const query = new URLSearchParams();
       ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA'].forEach(s => query.append('symbols', s));
-      query.append('pe_max', '40');
-      query.append('dividend_min', '0');
-      query.append('rsi_max', '80');
 
-      const res = await fetch(`https://actinovatestockscreener-production.up.railway.app/api/screener?${query}`);
-      const data = await res.json();
-      setStocks(data); // Adjust if your backend returns { results: [] }
-    } catch (err) {
-      console.error('Failed to fetch screener data', err);
-      toast.error('Error loading screener data');
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (filters.peMax) query.append('pe_max', filters.peMax);
+    if (filters.dividendMin) query.append('dividend_min', filters.dividendMin);
+    if (filters.rsiMax) query.append('rsi_max', filters.rsiMax);
+    if (filters.sector && filters.sector !== 'All') query.append('sector', filters.sector);
+
+    const res = await fetch(`https://actinovatestockscreener-production.up.railway.app/api/screener?${query}`);
+    const data = await res.json();
+    setStocks(data);
+  } catch (err) {
+    console.error('Error loading screener data', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchScreener();
