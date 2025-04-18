@@ -32,6 +32,94 @@ def ping():
 def cached_stock_data(symbol):
     return get_full_stock_data(symbol)
 
+# ===========================
+# API: MOCK PORTFOLIO DATA (Replace with DB later)
+# ===========================
+@app.route('/api/portfolio')
+def get_portfolio():
+    mock_portfolio = [
+        {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "shares": 25,
+            "avg_price": 145.75,
+            "current_price": 185.92,
+            "total_value": 4648.00,
+            "profit_loss": 1004.25,
+            "profit_loss_percent": 27.56
+        },
+        {
+            "symbol": "MSFT",
+            "name": "Microsoft Corporation",
+            "shares": 15,
+            "avg_price": 235.45,
+            "current_price": 328.79,
+            "total_value": 4931.85,
+            "profit_loss": 1400.10,
+            "profit_loss_percent": 39.64
+        },
+        {
+            "symbol": "GOOGL",
+            "name": "Alphabet Inc.",
+            "shares": 10,
+            "avg_price": 1290.35,
+            "current_price": 1450.16,
+            "total_value": 14501.60,
+            "profit_loss": 1598.10,
+            "profit_loss_percent": 12.38
+        },
+        {
+            "symbol": "AMZN",
+            "name": "Amazon.com, Inc.",
+            "shares": 8,
+            "avg_price": 2860.75,
+            "current_price": 3120.50,
+            "total_value": 24964.00,
+            "profit_loss": 2078.00,
+            "profit_loss_percent": 9.08
+        },
+        {
+            "symbol": "TSLA",
+            "name": "Tesla, Inc.",
+            "shares": 20,
+            "avg_price": 235.65,
+            "current_price": 273.58,
+            "total_value": 5471.60,
+            "profit_loss": 758.60,
+            "profit_loss_percent": 16.09
+        },
+        {
+            "symbol": "NVDA",
+            "name": "NVIDIA Corporation",
+            "shares": 12,
+            "avg_price": 210.25,
+            "current_price": 435.10,
+            "total_value": 5221.20,
+            "profit_loss": 2698.20,
+            "profit_loss_percent": 106.94
+        },
+        {
+            "symbol": "META",
+            "name": "Meta Platforms, Inc.",
+            "shares": 18,
+            "avg_price": 195.72,
+            "current_price": 297.80,
+            "total_value": 5360.40,
+            "profit_loss": 1837.44,
+            "profit_loss_percent": 52.16
+        }
+    ]
+
+    portfolio_summary = {
+        "total_value": 35133.28,
+        "total_profit_loss": 7451.44,
+        "day_change": 523.80
+    }
+
+    return jsonify({
+        "portfolio": mock_portfolio,
+        "summary": portfolio_summary
+    })
 
 # ===========================
 # API: SINGLE STOCK DATA
