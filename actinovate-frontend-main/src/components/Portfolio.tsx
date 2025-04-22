@@ -1,8 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from "sonner";
+import { toast } from 'sonner';
+
+// Supabase client
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
+);
 
 const Portfolio = () => {
   const [loading, setLoading] = useState(true);
@@ -13,13 +20,35 @@ const Portfolio = () => {
     dayChange: 0
   });
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
-
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/portfolio`);
-        const data = await response.json();
+        const {
+          data: { session },
+          error
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          toast.error("You must be logged in.");
+          return;
+        }
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-portfolio`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const data = await res.json();
+
+        if (res.status !== 200) {
+          throw new Error(data.error || "Failed to fetch portfolio");
+        }
 
         setPortfolioStocks(data.stocks || []);
         setPortfolioSummary({
@@ -38,18 +67,16 @@ const Portfolio = () => {
     fetchPortfolio();
   }, []);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(value);
-  };
 
-  const formatPercent = (value) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-  };
+  const formatPercent = (value: number) =>
+    `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 
   const handleAddPosition = () => {
     toast.info('Add position feature coming soon!');
@@ -125,7 +152,7 @@ const Portfolio = () => {
                 </tr>
               ))
             ) : (
-              portfolioStocks.map((stock) => (
+              portfolioStocks.map((stock: any) => (
                 <tr key={stock.symbol}>
                   <td className="font-medium">{stock.symbol}</td>
                   <td>{stock.name}</td>
