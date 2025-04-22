@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
