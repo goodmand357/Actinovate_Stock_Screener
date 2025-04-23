@@ -33,7 +33,7 @@ const Portfolio = () => {
         }
 
         const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-portfolio`,
+          `${import.meta.env.VITE_BASE_URL}/api/v1/portfolio`,
           {
             method: "POST",
             headers: {
