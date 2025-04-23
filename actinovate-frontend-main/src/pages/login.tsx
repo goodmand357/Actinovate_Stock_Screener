@@ -1,4 +1,5 @@
-import { supabase } from '../../lib/supabaseClient';
+// src/pages/login.tsx
+import { supabase } from '../lib/supabaseClient';
 
 export default function Login() {
   const signIn = async () => {
