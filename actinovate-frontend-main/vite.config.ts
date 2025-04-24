@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -19,7 +20,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    outDir: "dist", // ✅ Required for Vercel and Railway
-    // ❌ Removed external to allow bundling supabase-js
+    outDir: "dist",
   },
 }));
