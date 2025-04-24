@@ -19,9 +19,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    outDir: "dist", // ✅ Required for Vercel
-    rollupOptions: {
-      external: ["@supabase/supabase-js"], // ✅ Keep this to avoid bundle issues
-    },
+    outDir: "dist", // ✅ Required for Vercel and Railway
+    // ❌ Removed external to allow bundling supabase-js
   },
 }));
