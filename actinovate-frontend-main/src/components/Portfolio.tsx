@@ -4,11 +4,8 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-// Supabase client
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// ✅ Import the shared Supabase client
+import { supabase } from '@/lib/supabaseClient';
 
 const Portfolio = () => {
   const [loading, setLoading] = useState(true);
@@ -33,7 +30,7 @@ const Portfolio = () => {
         }
 
         const res = await fetch(
-          `${import.meta.env.VITE_BASE_URL}/api/v1/portfolio`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/portfolio`,
           {
             method: "POST",
             headers: {
