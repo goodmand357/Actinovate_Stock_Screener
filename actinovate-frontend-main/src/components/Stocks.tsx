@@ -1,66 +1,76 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // You have this file already
+import StockDetail from './StockDetail'; // <-- import this for stock view
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [stocks, setStocks] = useState<any[]>([]);
-  const [selectedStock, setSelectedStock] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [stocks, setStocks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedStock, setSelectedStock] = useState(null);
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  // Fetch top 5 stocks on page load
   useEffect(() => {
-    fetchTopStocks();
+    // Initially load top 5 stocks
+    fetch(`${baseUrl}/api/get-stocks`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setStocks(data);
+        } else {
+          setStocks([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching top stocks:', err);
+        setStocks([]);
+        setLoading(false);
+      });
   }, []);
 
-  const fetchTopStocks = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${baseUrl}/api/top-stocks`); // <-- you need to create this API
-      const data = await res.json();
-      setStocks(data);
-    } catch (error) {
-      console.error('Error fetching top stocks:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleSearch = (query: string) => {
+    if (!query) return;
 
-  // Search specific stock
-  const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const query = e.currentTarget.value.trim().toUpperCase();
-      if (!query) return;
-      
-      setLoading(true);
-      try {
-        const res = await fetch(`${baseUrl}/api/financial-data?symbol=${query}`);
-        const data = await res.json();
-        if (data && data.ticker) {
+    setLoading(true);
+    fetch(`${baseUrl}/api/get-stock`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ symbol: query })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.symbol) {
           setStocks([data]);
         } else {
           setStocks([]);
         }
-      } catch (error) {
-        console.error('Error fetching stock:', error);
-        setStocks([]);
-      } finally {
         setLoading(false);
-      }
-    }
+      })
+      .catch(err => {
+        console.error('Error fetching stock:', err);
+        setStocks([]);
+        setLoading(false);
+      });
   };
 
-  const handleStockClick = (stock: any) => {
+  const handleSelectStock = (stock: any) => {
     setSelectedStock(stock);
   };
 
-  // When stock is selected, show StockDetail tabs
+  const handleBack = () => {
+    setSelectedStock(null);
+  };
+
   if (selectedStock) {
-    return <StockDetail stock={selectedStock} onBack={() => setSelectedStock(null)} />;
+    return (
+      <div className="animate-fadeIn">
+        <StockDetail stock={selectedStock} onBack={handleBack} />
+      </div>
+    );
   }
 
   return (
@@ -75,13 +85,17 @@ const Stocks = () => {
         <Input
           className="pl-10"
           placeholder="Search by symbol (e.g., TSLA)"
-          onKeyDown={handleSearch}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch(e.currentTarget.value.trim().toUpperCase());
+            }
+          }}
         />
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
-      ) : (
+      ) : stocks.length > 0 ? (
         <div className="table-container overflow-x-auto">
           <table className="stock-table w-full rounded-lg overflow-hidden">
             <thead className="bg-muted/50 border-b border-border">
@@ -89,37 +103,36 @@ const Stocks = () => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Symbol</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Price</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Change</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Market Cap</th>
               </tr>
             </thead>
             <tbody>
               {stocks.map((stock) => (
                 <tr
-                  key={stock.ticker}
-                  onClick={() => handleStockClick(stock)}
+                  key={stock.symbol}
+                  onClick={() => handleSelectStock(stock)}
                   className="cursor-pointer hover:bg-muted/50 border-b border-border transition-colors"
                 >
-                  <td className="px-4 py-4 font-medium">{stock.ticker}</td>
-                  <td className="px-4 py-4 text-muted-foreground">{stock.name}</td>
+                  <td className="px-4 py-4 font-medium">{stock.symbol}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{stock.name || stock.industry}</td>
                   <td className="px-4 py-4 text-right">${Number(stock.price || 0).toFixed(2)}</td>
-                  <td className="px-4 py-4 text-right">{formatMarketCap(stock.market_cap)}</td>
+                  <td className={`px-4 py-4 text-right ${stock.change_percent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stock.change >= 0 ? '+' : ''}{Number(stock.change).toFixed(2)} ({Number(stock.change_percent).toFixed(2)}%)
+                  </td>
+                  <td className="px-4 py-4 text-right">{stock.market_cap}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : searchQuery ? (
+        <p className="text-muted-foreground">No results for "{searchQuery}".</p>
+      ) : (
+        <p className="text-muted-foreground">No stocks to show.</p>
       )}
     </div>
   );
 };
 
 export default Stocks;
-
-const formatMarketCap = (value: number | undefined) => {
-  if (!value) return 'N/A';
-  if (value > 1e12) return `${(value / 1e12).toFixed(2)}T`;
-  if (value > 1e9) return `${(value / 1e9).toFixed(2)}B`;
-  if (value > 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  return value.toString();
-};
-
