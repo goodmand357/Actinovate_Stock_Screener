@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DollarSign, TrendingUp, BarChart2, Layers } from 'lucide-react';
 
@@ -24,8 +25,6 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
         <OverviewItem label="Market Cap" value={stock.marketCap || 'N/A'} />
         <OverviewItem label="Next Report" value={stock.nextReportDate || 'N/A'} />
       </Section>
-
-      {/* Add more sections if needed */}
     </div>
   );
 };
