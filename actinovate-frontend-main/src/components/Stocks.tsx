@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // <-- import this for stock view
+import StockDetail from './StockDetail'; // Importing the detailed view
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,9 +12,9 @@ const Stocks = () => {
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
+  // Load top 5 stocks initially
   useEffect(() => {
-    // Initially load top 5 stocks
-    fetch(`${baseUrl}/api/get-stocks`)
+    fetch(`${baseUrl}/functions/v1/get-stocks`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -30,11 +31,12 @@ const Stocks = () => {
       });
   }, []);
 
+  // Handle search by symbol
   const handleSearch = (query: string) => {
     if (!query) return;
 
     setLoading(true);
-    fetch(`${baseUrl}/api/get-stock`, {
+    fetch(`${baseUrl}/functions/v1/get-stock`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -63,6 +65,24 @@ const Stocks = () => {
 
   const handleBack = () => {
     setSelectedStock(null);
+    setSearchQuery('');
+    // Re-fetch top 5 again after going back
+    setLoading(true);
+    fetch(`${baseUrl}/functions/v1/get-stocks`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setStocks(data);
+        } else {
+          setStocks([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching top stocks:', err);
+        setStocks([]);
+        setLoading(false);
+      });
   };
 
   if (selectedStock) {
@@ -85,6 +105,8 @@ const Stocks = () => {
         <Input
           className="pl-10"
           placeholder="Search by symbol (e.g., TSLA)"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               handleSearch(e.currentTarget.value.trim().toUpperCase());
@@ -136,3 +158,4 @@ const Stocks = () => {
 };
 
 export default Stocks;
+
