@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StockHeader from './stock-detail/StockHeader';
@@ -14,6 +13,15 @@ interface StockDetailProps {
     price: number;
     change: number;
     changePercent: number;
+    volume?: string;
+    marketCap?: string;
+    peRatio?: number;
+    revenue?: string;
+    sector?: string;
+    industry?: string;
+    performanceData?: any[];
+    news?: { title: string; timeAgo: string }[];
+    // You can add more fields depending on what you pass down!
   };
   onBack: () => void;
 }
@@ -30,21 +38,21 @@ const StockDetail: React.FC<StockDetailProps> = ({ stock, onBack }) => {
           <TabsTrigger value="technical" className="rounded-md">Technical</TabsTrigger>
           <TabsTrigger value="news" className="rounded-md">News</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="chart" className="block">
-          <StockChart />
+          <StockChart stock={stock} />
         </TabsContent>
-        
+
         <TabsContent value="financial">
-          <FinancialData />
+          <FinancialData stock={stock} />
         </TabsContent>
-        
+
         <TabsContent value="technical">
-          <TechnicalData />
+          <TechnicalData stock={stock} />
         </TabsContent>
-        
+
         <TabsContent value="news">
-          <NewsData />
+          <NewsData stock={stock} />
         </TabsContent>
       </Tabs>
     </div>
