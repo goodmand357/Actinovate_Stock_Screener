@@ -84,37 +84,36 @@ const handleSearch = async (query: string) => {
     );
   }
 
-  return (
-    <div className="animate-fadeIn">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Stocks</h1>
-        <p className="text-muted-foreground mt-1">Track and analyze stocks</p>
-      </div>
-
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          className="pl-10"
-          placeholder="Search by symbol (e.g., TSLA)"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSearch(e.currentTarget.value.trim().toUpperCase());
-            }
-          }}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          value={searchQuery}
-        />
-      </div>
-
-      {loading ? (
-        <p className="text-muted-foreground">Loading...</p>
-      ) : stocks.length > 0 ? (
-        <StockList stocks={stocks} onSelect={handleSelectStock} />
-      ) : (
-        <p className="text-muted-foreground">No stocks to show.</p>
-      )}
+return (
+  <div className="animate-fadeIn">
+    <div className="mb-6">
+      <h1 className="text-3xl font-bold">Stocks</h1>
+      <p className="text-muted-foreground mt-1">Track and analyze stocks</p>
     </div>
-  );
-};
 
-export default Stocks;
+    <div className="relative mb-6">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <Input
+        className="pl-10"
+        placeholder="Search by symbol (e.g., TSLA)"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleSearch(e.currentTarget.value.trim().toUpperCase());
+          }
+        }}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        value={searchQuery}
+      />
+    </div>
+
+    {loading ? (
+      <p className="text-muted-foreground">Loading...</p>
+    ) : stocks.length > 0 ? (
+      <StockList stocks={stocks} onSelect={handleSelectStock} />
+    ) : (
+      <p className="text-muted-foreground">No stocks to show.</p>
+    )}
+  </div>
+);
+
+  export default Stocks;
