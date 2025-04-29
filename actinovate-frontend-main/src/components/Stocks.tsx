@@ -19,51 +19,53 @@ const Stocks = () => {
     fetchTopStocks();
   }, []);
 
-  const fetchTopStocks = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${functionsUrl}/get-stocks`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setStocks(data.slice(0, 5)); // limit to 5
-      } else {
-        setStocks([]);
+const fetchTopStocks = async () => {
+  setLoading(true);
+  try {
+    const res = await fetch(`${functionsUrl}/get-stocks`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` // 🛠 ADD THIS
       }
-    } catch (error) {
-      console.error('Error fetching top stocks:', error);
+    });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      setStocks(data.slice(0, 5));
+    } else {
       setStocks([]);
     }
-    setLoading(false);
-  };
+  } catch (error) {
+    console.error('Error fetching top stocks:', error);
+    setStocks([]);
+  }
+  setLoading(false);
+};
 
-  const handleSearch = async (query: string) => {
-    if (!query) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${functionsUrl}/get-financial-data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ symbol: query })
-      });
-      const data = await res.json();
-      if (data && data.ticker) {
-        setStocks([data]);
-      } else {
-        setStocks([]);
-      }
-    } catch (error) {
-      console.error('Error searching stock:', error);
+const handleSearch = async (query: string) => {
+  if (!query) return;
+  setLoading(true);
+  try {
+    const res = await fetch(`${functionsUrl}/get-financial-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` // 🛠 ADD THIS
+      },
+      body: JSON.stringify({ symbol: query })
+    });
+    const data = await res.json();
+    if (data && data.ticker) {
+      setStocks([data]);
+    } else {
       setStocks([]);
     }
-    setLoading(false);
-  };
+  } catch (error) {
+    console.error('Error searching stock:', error);
+    setStocks([]);
+  }
+  setLoading(false);
+};
 
   const handleSelectStock = (stock: any) => {
     setSelectedStock(stock);
