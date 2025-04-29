@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; 
-import StockList from './StockList'; 
+import StockDetail from './StockDetail';
+import StockList from './StockList';
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +13,7 @@ const Stocks = () => {
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY; // ✅ load anon key
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   const functionsUrl = `${baseUrl}/functions/v1`;
 
   useEffect(() => {
@@ -28,12 +28,12 @@ const Stocks = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}` // ✅ important
+          'Authorization': `Bearer ${supabaseAnonKey}`
         }
       });
       const data = await res.json();
       if (Array.isArray(data)) {
-        setStocks(data.slice(0, 5)); // show top 5
+        setStocks(data.slice(0, 5));
       } else {
         setStocks([]);
       }
@@ -54,15 +54,17 @@ const Stocks = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}` // ✅ important
+          'Authorization': `Bearer ${supabaseAnonKey}`
         },
         body: JSON.stringify({ symbol: query })
       });
       const data = await res.json();
-      if (data && data.ticker) {
+      console.log('Search result:', data); // Debug log
+      if (data && data.symbol) {
         setStocks([data]);
       } else {
         setStocks([]);
+        setError('No stock found.');
       }
     } catch (err) {
       console.error('Error searching stock:', err);
@@ -112,7 +114,7 @@ const Stocks = () => {
         />
       </div>
 
-      {/* Loading, Error or List */}
+      {/* Loading / Error / List */}
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : error ? (
