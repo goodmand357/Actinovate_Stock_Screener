@@ -70,6 +70,7 @@ def get_from_yahoo(symbol):
     try:
         stock = yf.Ticker(symbol)
         info = stock.info
+        fast_info = stock.fast_info
 
         financials = stock.financials
         revenue_growth = [None, None, None]
@@ -82,7 +83,9 @@ def get_from_yahoo(symbol):
             pass
 
         return {
-            "price": info.get("currentPrice"),
+            "price": info.get("currentPrice") or fast_info.get("last_price"),
+            "previous_close": info.get("previousClose") or fast_info.get("previous_close"),
+            "volume": info.get("volume") or fast_info.get("last_volume"),
             "pe_ratio": info.get("trailingPE"),
             "eps": info.get("trailingEps"),
             "dividend_yield": info.get("dividendYield"),
