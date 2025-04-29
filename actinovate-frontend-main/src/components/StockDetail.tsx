@@ -12,37 +12,32 @@ interface StockDetailProps {
     name: string;
     price: number;
     change: number;
-    changePercent: number;
-    volume?: string;
-    marketCap?: string;
-    peRatio?: number;
-    revenue?: string;
-    sector?: string;
-    industry?: string;
-    performanceData?: any[];
-    news?: { title: string; timeAgo: string }[];
-    // You can add more fields depending on what you pass down!
+    change_percent: number;
+    [key: string]: any; // allow flexible extra fields
   };
   onBack: () => void;
 }
 
 const StockDetail: React.FC<StockDetailProps> = ({ stock, onBack }) => {
   return (
-    <div className="space-y-4 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Back button + stock basic info */}
       <StockHeader stock={stock} onBack={onBack} />
 
-      <Tabs defaultValue="chart">
-        <TabsList className="mb-6 p-1 bg-gray-50 dark:bg-slate-900 inline-flex rounded-md border border-gray-100 dark:border-slate-700">
-          <TabsTrigger value="chart" className="rounded-md">Chart</TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-md">Financial</TabsTrigger>
-          <TabsTrigger value="technical" className="rounded-md">Technical</TabsTrigger>
-          <TabsTrigger value="news" className="rounded-md">News</TabsTrigger>
+      {/* Tabs */}
+      <Tabs defaultValue="chart" className="w-full">
+        <TabsList className="mb-6 flex gap-2 bg-muted/50 p-2 rounded-md">
+          <TabsTrigger value="chart" className="px-4 py-2 rounded-md">Chart</TabsTrigger>
+          <TabsTrigger value="financial" className="px-4 py-2 rounded-md">Financial</TabsTrigger>
+          <TabsTrigger value="technical" className="px-4 py-2 rounded-md">Technical</TabsTrigger>
+          <TabsTrigger value="news" className="px-4 py-2 rounded-md">News</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chart" className="block">
+        {/* Tab contents */}
+        <TabsContent value="chart">
           <StockChart stock={stock} />
         </TabsContent>
-
+        
         <TabsContent value="financial">
           <FinancialData stock={stock} />
         </TabsContent>
