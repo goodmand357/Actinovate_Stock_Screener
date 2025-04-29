@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // path is correct
-import StockList from './StockList'; // to list multiple stocks
+import StockDetail from './StockDetail'; // ✅ correct import
+import StockList from './StockList'; // ✅ correct import
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -116,4 +116,3 @@ const Stocks = () => {
 };
 
 export default Stocks;
-
