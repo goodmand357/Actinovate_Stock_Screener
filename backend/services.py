@@ -70,11 +70,9 @@ def get_from_yahoo(symbol):
     try:
         stock = yf.Ticker(symbol)
         info = stock.info
-        fast_info = stock.fast_info
 
-        financials = stock.financials
+        # Revenue growth history
         revenue_growth = [None, None, None]
-
         try:
             rev_series = stock.financials.loc["Total Revenue"]
             rev = rev_series.iloc[:4].values
@@ -83,23 +81,43 @@ def get_from_yahoo(symbol):
             pass
 
         return {
-            "price": info.get("currentPrice") or fast_info.get("last_price"),
-            "previous_close": info.get("previousClose") or fast_info.get("previous_close"),
-            "volume": info.get("volume") or fast_info.get("last_volume"),
+            "name": info.get("displayName") or info.get("longName") or info.get("shortName") or symbol,
+            "summary": info.get("longBusinessSummary"),
+            "website": info.get("website"),
+            "founded": info.get("firstTradeDateMilliseconds"),  # you'll convert this to year in frontend
+            "full_time_employees": info.get("fullTimeEmployees"),
+            "officers": info.get("companyOfficers", []),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "price": info.get("currentPrice"),
+            "market_cap": info.get("marketCap"),
+            "volume": info.get("volume"),
             "pe_ratio": info.get("trailingPE"),
             "eps": info.get("trailingEps"),
             "dividend_yield": info.get("dividendYield"),
-            "sector": info.get("sector"),
-            "industry": info.get("industry"),
-            "market_cap": info.get("marketCap"),
-            "revenue": info.get("totalRevenue"),
             "net_profit": info.get("netIncomeToCommon"),
+            "revenue": info.get("totalRevenue"),
             "eps_growth_yoy": info.get("earningsQuarterlyGrowth"),
             "revenue_growth_yoy": info.get("revenueGrowth"),
             "revenue_growth_y1": revenue_growth[0],
             "revenue_growth_y2": revenue_growth[1],
             "revenue_growth_y3": revenue_growth[2],
+            "sma_10": info.get("fiftyDayAverage"),
+            "sma_200": info.get("twoHundredDayAverage"),
+            "beta": info.get("beta"),
+            "price_to_sales": info.get("priceToSalesTrailing12Months"),
+            "price_to_book": info.get("priceToBook"),
+            "debt_to_equity": info.get("debtToEquity"),
+            "return_on_equity": info.get("returnOnEquity"),
+            "return_on_assets": info.get("returnOnAssets"),
+            "operating_margin": info.get("operatingMargins"),
+            "profit_margin": info.get("profitMargins"),
+            "current_ratio": info.get("currentRatio"),
+            "quick_ratio": info.get("quickRatio"),
+            "free_cashflow": info.get("freeCashflow"),
+            "operating_cashflow": info.get("operatingCashflow")
         }
+
     except Exception as e:
         print(f"Error in get_from_yahoo for {symbol}: {e}")
         return {}
