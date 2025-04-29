@@ -68,62 +68,56 @@ def get_technical_indicators(symbol):
 # ============================
 import yfinance as yf
 
-def get_from_yahoo(symbol):
+def get_stock_data(symbol):
     try:
         ticker = yf.Ticker(symbol)
         info = ticker.info
+        fast_info = ticker.fast_info
+        history = ticker.history(period="6mo")
 
-        # Pull historical data if needed
-        history = ticker.history(period="1d")
-        price = info.get("regularMarketPrice") or info.get("currentPrice")
+        # Safe getters with fallbacks
+        price = info.get("currentPrice") or fast_info.get("last_price")
+        previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
+        change = price - previous_close if price and previous_close else 0
+        percent_change = (change / previous_close * 100) if previous_close else 0
 
-        return {
-            "name": info.get("longName") or info.get("shortName") or info.get("displayName"),
-            "summary": info.get("longBusinessSummary"),
+        # Stocks tab fields
+        stock = {
+            "ticker": symbol,
+            "name": info.get("longName") or info.get("shortName") or info.get("displayName") or "N/A",
+            "price": round(price, 2) if price else None,
+            "change": round(change, 2),
+            "change_percent": round(percent_change, 2),
+            "volume": info.get("volume") or fast_info.get("volume") or 0,
+            "market_cap": info.get("marketCap") or fast_info.get("market_cap") or 0,
+        }
+
+        # Additional metrics for other tabs
+        stock.update({
             "sector": info.get("sector"),
             "industry": info.get("industry"),
+            "summary": info.get("longBusinessSummary"),
             "website": info.get("website"),
-            "founded": info.get("firstTradeDateMilliseconds"),
-            "full_time_employees": info.get("fullTimeEmployees"),
-            "officers": info.get("companyOfficers"),
-
-            # Pricing & Volume
-            "price": price,
-            "previous_close": info.get("previousClose"),
-            "volume": info.get("volume"),
-            "market_cap": info.get("marketCap"),
-
-            # Financial Ratios
+            "founded": info.get("firstTradeDateEpochUtc"),
             "pe_ratio": info.get("trailingPE"),
+            "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
             "eps": info.get("trailingEps"),
-            "dividend_yield": info.get("dividendYield"),
-            "price_to_sales": info.get("priceToSalesTrailing12Months"),
-            "price_to_book": info.get("priceToBook"),
-
-            # Growth / Profitability
-            "revenue": info.get("totalRevenue"),
-            "net_profit": info.get("netIncomeToCommon"),
-            "profit_margin": info.get("profitMargins"),
-            "return_on_assets": info.get("returnOnAssets"),
-            "return_on_equity": info.get("returnOnEquity"),
-            "revenue_growth_yoy": info.get("revenueGrowth"),
-            "eps_growth_yoy": info.get("earningsQuarterlyGrowth"),
-
-            # Liquidity
-            "current_ratio": info.get("currentRatio"),
-            "quick_ratio": info.get("quickRatio"),
-
-            # Momentum
-            "beta": info.get("beta"),
-            "sma_10": None,  # calculated elsewhere
+            "rsi": None,  # Add later if calculated manually
+            "sma_10": None,
+            "sma_20": None,
+            "sma_50": None,
             "sma_200": info.get("twoHundredDayAverage"),
-            "momentum": None,  # add from tech indicators
+            "balance_sheet": ticker.balance_sheet.to_dict(),
+            "financials": ticker.financials.to_dict(),
+            "cashflow": ticker.cashflow.to_dict(),
+            "officers": info.get("companyOfficers"),
+        })
 
-            "ticker": symbol.upper()
-        }
+        return stock
+
     except Exception as e:
-        print(f"Error in get_from_yahoo for {symbol}: {e}")
-        return {}
+        print("Error fetching stock data:", e)
+        return {"error": str(e)}
 
 # ============================
 # Finnhub API fallback
