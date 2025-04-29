@@ -116,9 +116,9 @@ def get_stock_data(symbol):
         return stock
 
     except Exception as e:
-        print("Error fetching stock data:", e)
-        return {"error": str(e)}
-
+        print(f"Error in get_from_yahoo for {symbol}: {e}")
+        return {}
+        
 # ============================
 # Finnhub API fallback
 # ============================
