@@ -66,58 +66,61 @@ def get_technical_indicators(symbol):
 # ============================
 # Fallback: Yahoo Finance via yfinance
 # ============================
+import yfinance as yf
+
 def get_from_yahoo(symbol):
     try:
-        stock = yf.Ticker(symbol)
-        info = stock.info
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
 
-        # Revenue growth history
-        revenue_growth = [None, None, None]
-        try:
-            rev_series = stock.financials.loc["Total Revenue"]
-            rev = rev_series.iloc[:4].values
-            revenue_growth = [(rev[i] - rev[i+1]) / rev[i+1] * 100 for i in range(3)]
-        except:
-            pass
+        # Pull historical data if needed
+        history = ticker.history(period="1d")
+        price = info.get("regularMarketPrice") or info.get("currentPrice")
 
         return {
-            "name": info.get("displayName") or info.get("longName") or info.get("shortName") or symbol,
+            "name": info.get("longName") or info.get("shortName") or info.get("displayName"),
             "summary": info.get("longBusinessSummary"),
-            "website": info.get("website"),
-            "founded": info.get("firstTradeDateMilliseconds"),  # you'll convert this to year in frontend
-            "full_time_employees": info.get("fullTimeEmployees"),
-            "officers": info.get("companyOfficers", []),
             "sector": info.get("sector"),
             "industry": info.get("industry"),
-            "price": info.get("currentPrice"),
-            "market_cap": info.get("marketCap"),
+            "website": info.get("website"),
+            "founded": info.get("firstTradeDateMilliseconds"),
+            "full_time_employees": info.get("fullTimeEmployees"),
+            "officers": info.get("companyOfficers"),
+
+            # Pricing & Volume
+            "price": price,
+            "previous_close": info.get("previousClose"),
             "volume": info.get("volume"),
+            "market_cap": info.get("marketCap"),
+
+            # Financial Ratios
             "pe_ratio": info.get("trailingPE"),
             "eps": info.get("trailingEps"),
             "dividend_yield": info.get("dividendYield"),
-            "net_profit": info.get("netIncomeToCommon"),
-            "revenue": info.get("totalRevenue"),
-            "eps_growth_yoy": info.get("earningsQuarterlyGrowth"),
-            "revenue_growth_yoy": info.get("revenueGrowth"),
-            "revenue_growth_y1": revenue_growth[0],
-            "revenue_growth_y2": revenue_growth[1],
-            "revenue_growth_y3": revenue_growth[2],
-            "sma_10": info.get("fiftyDayAverage"),
-            "sma_200": info.get("twoHundredDayAverage"),
-            "beta": info.get("beta"),
             "price_to_sales": info.get("priceToSalesTrailing12Months"),
             "price_to_book": info.get("priceToBook"),
-            "debt_to_equity": info.get("debtToEquity"),
-            "return_on_equity": info.get("returnOnEquity"),
-            "return_on_assets": info.get("returnOnAssets"),
-            "operating_margin": info.get("operatingMargins"),
+
+            # Growth / Profitability
+            "revenue": info.get("totalRevenue"),
+            "net_profit": info.get("netIncomeToCommon"),
             "profit_margin": info.get("profitMargins"),
+            "return_on_assets": info.get("returnOnAssets"),
+            "return_on_equity": info.get("returnOnEquity"),
+            "revenue_growth_yoy": info.get("revenueGrowth"),
+            "eps_growth_yoy": info.get("earningsQuarterlyGrowth"),
+
+            # Liquidity
             "current_ratio": info.get("currentRatio"),
             "quick_ratio": info.get("quickRatio"),
-            "free_cashflow": info.get("freeCashflow"),
-            "operating_cashflow": info.get("operatingCashflow")
-        }
 
+            # Momentum
+            "beta": info.get("beta"),
+            "sma_10": None,  # calculated elsewhere
+            "sma_200": info.get("twoHundredDayAverage"),
+            "momentum": None,  # add from tech indicators
+
+            "ticker": symbol.upper()
+        }
     except Exception as e:
         print(f"Error in get_from_yahoo for {symbol}: {e}")
         return {}
@@ -175,15 +178,15 @@ def smart_merge(*sources):
 # Final Aggregator
 # ============================
 def get_full_stock_data(symbol):
-    yahoo_data = get_from_yahoo(symbol) or {}
-    alpha_data = get_from_alpha_vantage(symbol) or {}
-    tech_data = get_technical_indicators(symbol) or {}
-    finnhub_data = get_from_finnhub(symbol) or {}
-    polygon_data = get_from_polygon(symbol) or {}
+    yahoo_data = get_from_yahoo(symbol)
+    alpha_data = get_from_alpha_vantage(symbol)
+    tech_data = get_technical_indicators(symbol)
+    finnhub_data = get_from_finnhub(symbol)
+    polygon_data = get_from_polygon(symbol)
 
     return smart_merge(
-        alpha_data,
         yahoo_data,
+        alpha_data,
         tech_data,
         finnhub_data,
         polygon_data,
