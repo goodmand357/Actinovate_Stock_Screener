@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // make sure this path is correct!
+import StockDetail from './StockDetail'; // Make sure this exists
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,7 +10,34 @@ const Stocks = () => {
   const [loading, setLoading] = useState(false);
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL; // your Supabase URL
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL; // example: https://hweaxbinilpqxczmhtzr.supabase.co
+
+  // Fetch top 5 stocks when the page loads
+  useEffect(() => {
+    const fetchTopStocks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${baseUrl}/functions/v1/get-stocks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setStocks(data);
+        } else {
+          setStocks([]);
+        }
+      } catch (error) {
+        console.error('Error fetching top stocks:', error);
+        setStocks([]);
+      }
+      setLoading(false);
+    };
+
+    fetchTopStocks();
+  }, [baseUrl]);
 
   const handleSearch = async (query: string) => {
     if (!query) return;
@@ -20,24 +47,23 @@ const Stocks = () => {
       const res = await fetch(`${baseUrl}/functions/v1/get-financial-data`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ symbol: query }),
+        body: JSON.stringify({ symbol: query })
       });
-
       const data = await res.json();
-
       if (data && data.ticker) {
         setStocks([data]);
       } else {
         setStocks([]);
       }
+      setSearchQuery(query); // << Important! Update searchQuery here
     } catch (error) {
-      console.error('Error fetching stock:', error);
+      console.error('Error searching stock:', error);
       setStocks([]);
+      setSearchQuery(query); // << Important even on error
     }
     setLoading(false);
-    setSearchQuery(query); // update the current search query
   };
 
   const handleSelectStock = (stock: any) => {
@@ -93,12 +119,12 @@ const Stocks = () => {
             <tbody>
               {stocks.map((stock) => (
                 <tr
-                  key={stock.ticker}
+                  key={stock.ticker || stock.symbol}
                   onClick={() => handleSelectStock(stock)}
                   className="cursor-pointer hover:bg-muted/50 border-b border-border transition-colors"
                 >
-                  <td className="px-4 py-4 font-medium">{stock.ticker}</td>
-                  <td className="px-4 py-4 text-muted-foreground">{stock.sector || 'N/A'}</td>
+                  <td className="px-4 py-4 font-medium">{stock.ticker || stock.symbol}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{stock.sector || stock.industry || 'N/A'}</td>
                   <td className="px-4 py-4 text-right">${Number(stock.price || 0).toFixed(2)}</td>
                   <td className="px-4 py-4 text-right">{Number(stock.pe_ratio || 0).toFixed(2)}</td>
                   <td className="px-4 py-4 text-right">{formatMarketCap(stock.market_cap)}</td>
@@ -123,5 +149,5 @@ const formatMarketCap = (value: number | undefined) => {
   if (value > 1e12) return `${(value / 1e12).toFixed(2)}T`;
   if (value > 1e9) return `${(value / 1e9).toFixed(2)}B`;
   if (value > 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  return value?.toString();
+  return value.toString();
 };
