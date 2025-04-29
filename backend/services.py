@@ -186,9 +186,3 @@ def get_full_stock_data(symbol):
         polygon_data,
         {"ticker": symbol.upper()}
     )
-
-if __name__ == "__main__":
-    symbol = "AAPL"
-    stock_data = get_full_stock_data(symbol)
-    for key, val in stock_data.items():
-        print(f"{key}: {val}")
