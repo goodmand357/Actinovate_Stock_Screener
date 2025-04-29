@@ -2,51 +2,58 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // adjust if your path is different
+import StockDetail from './StockDetail'; // path is correct
+import StockList from './StockList'; // to list multiple stocks
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [stocks, setStocks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL; // your Supabase project URL
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL; 
+  const functionsUrl = `${baseUrl}/functions/v1`;
 
-  // Load top 5 stocks when page loads
+  // Fetch Top 5 stocks on page load
   useEffect(() => {
-    fetch(`${baseUrl}/functions/v1/get-stocks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setStocks(data);
-        } else {
-          setStocks([]);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching top stocks:', error);
-        setStocks([]);
-        setLoading(false);
-      });
+    fetchTopStocks();
   }, []);
 
-  // Handle search (fetch single stock)
-  const handleSearch = async (query: string) => {
-    if (!query) return;
-
+  const fetchTopStocks = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/functions/v1/get-stock`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: query }),
+      const res = await fetch(`${functionsUrl}/get-stocks`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       const data = await res.json();
-      if (data && data.symbol) {
+      if (Array.isArray(data)) {
+        setStocks(data.slice(0, 5)); // limit to 5
+      } else {
+        setStocks([]);
+      }
+    } catch (error) {
+      console.error('Error fetching top stocks:', error);
+      setStocks([]);
+    }
+    setLoading(false);
+  };
+
+  const handleSearch = async (query: string) => {
+    if (!query) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${functionsUrl}/get-financial-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ symbol: query })
+      });
+      const data = await res.json();
+      if (data && data.ticker) {
         setStocks([data]);
       } else {
         setStocks([]);
@@ -64,6 +71,7 @@ const Stocks = () => {
 
   const handleBack = () => {
     setSelectedStock(null);
+    fetchTopStocks(); // refresh top stocks when you go back
   };
 
   if (selectedStock) {
@@ -88,56 +96,18 @@ const Stocks = () => {
           placeholder="Search by symbol (e.g., TSLA)"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              const query = e.currentTarget.value.trim().toUpperCase();
-              setSearchQuery(query);
-              handleSearch(query);
+              handleSearch(e.currentTarget.value.trim().toUpperCase());
             }
           }}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchQuery}
         />
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : stocks.length > 0 ? (
-        <div className="table-container overflow-x-auto">
-          <table className="stock-table w-full rounded-lg overflow-hidden">
-            <thead className="bg-muted/50 border-b border-border">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Symbol</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Price</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Change</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Volume</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Market Cap</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stocks.map((stock) => (
-                <tr
-                  key={stock.symbol}
-                  onClick={() => handleSelectStock(stock)}
-                  className="cursor-pointer hover:bg-muted/50 border-b border-border transition-colors"
-                >
-                  <td className="px-4 py-4 font-medium">{stock.symbol}</td>
-                  <td className="px-4 py-4 text-muted-foreground">{stock.name || 'N/A'}</td>
-                  <td className="px-4 py-4 text-right">${Number(stock.price || 0).toFixed(2)}</td>
-                  <td
-                    className={`px-4 py-4 text-right ${
-                      stock.change_percent >= 0 ? 'text-green-500' : 'text-red-500'
-                    }`}
-                  >
-                    {stock.change >= 0 ? '+' : ''}
-                    {Number(stock.change).toFixed(2)} ({Number(stock.change_percent).toFixed(2)}%)
-                  </td>
-                  <td className="px-4 py-4 text-right">{stock.volume}</td>
-                  <td className="px-4 py-4 text-right">{stock.market_cap}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : searchQuery ? (
-        <p className="text-muted-foreground">No results for "{searchQuery}".</p>
+        <StockList stocks={stocks} onSelect={handleSelectStock} />
       ) : (
         <p className="text-muted-foreground">No stocks to show.</p>
       )}
