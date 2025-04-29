@@ -2,16 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // we'll use it later
-import StockList from './StockList'; // correct path
+import StockDetail from './StockDetail'; 
+import StockList from './StockList'; 
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [stocks, setStocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY; // ✅ load anon key
   const functionsUrl = `${baseUrl}/functions/v1`;
 
   useEffect(() => {
@@ -20,16 +22,25 @@ const Stocks = () => {
 
   const fetchTopStocks = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${functionsUrl}/get-stocks`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}` // ✅ important
+        }
       });
       const data = await res.json();
-      setStocks(data.slice(0, 5));
+      if (Array.isArray(data)) {
+        setStocks(data.slice(0, 5)); // show top 5
+      } else {
+        setStocks([]);
+      }
     } catch (err) {
       console.error('Error fetching top stocks:', err);
       setError('Failed to fetch stocks.');
+      setStocks([]);
     }
     setLoading(false);
   };
@@ -37,10 +48,14 @@ const Stocks = () => {
   const handleSearch = async (query: string) => {
     if (!query) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${functionsUrl}/get-financial-data`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}` // ✅ important
+        },
         body: JSON.stringify({ symbol: query })
       });
       const data = await res.json();
@@ -51,10 +66,28 @@ const Stocks = () => {
       }
     } catch (err) {
       console.error('Error searching stock:', err);
+      setError('Failed to search stock.');
       setStocks([]);
     }
     setLoading(false);
   };
+
+  const handleSelectStock = (stock: any) => {
+    setSelectedStock(stock);
+  };
+
+  const handleBack = () => {
+    setSelectedStock(null);
+    fetchTopStocks();
+  };
+
+  if (selectedStock) {
+    return (
+      <div className="animate-fadeIn">
+        <StockDetail stock={selectedStock} onBack={handleBack} />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">
@@ -63,6 +96,7 @@ const Stocks = () => {
         <p className="text-muted-foreground mt-1">Track and analyze stocks</p>
       </div>
 
+      {/* Search Bar */}
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
@@ -78,12 +112,13 @@ const Stocks = () => {
         />
       </div>
 
+      {/* Loading, Error or List */}
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : stocks.length > 0 ? (
-        <StockList stocks={stocks} onSelect={() => {}} />
+        <StockList stocks={stocks} onSelect={handleSelectStock} />
       ) : (
         <p className="text-muted-foreground">No stocks to show.</p>
       )}
@@ -92,4 +127,3 @@ const Stocks = () => {
 };
 
 export default Stocks;
-
