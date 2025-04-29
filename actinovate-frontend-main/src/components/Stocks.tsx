@@ -2,66 +2,58 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import StockDetail from './StockDetail'; // Make sure this exists
+import StockDetail from './StockDetail'; // adjust if your path is different
 
 const Stocks = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [stocks, setStocks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL; // example: https://hweaxbinilpqxczmhtzr.supabase.co
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL; // your Supabase project URL
 
-  // Fetch top 5 stocks when the page loads
+  // Load top 5 stocks when page loads
   useEffect(() => {
-    const fetchTopStocks = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${baseUrl}/functions/v1/get-stocks`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await res.json();
+    fetch(`${baseUrl}/functions/v1/get-stocks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) {
           setStocks(data);
         } else {
           setStocks([]);
         }
-      } catch (error) {
+        setLoading(false);
+      })
+      .catch((error) => {
         console.error('Error fetching top stocks:', error);
         setStocks([]);
-      }
-      setLoading(false);
-    };
+        setLoading(false);
+      });
+  }, []);
 
-    fetchTopStocks();
-  }, [baseUrl]);
-
+  // Handle search (fetch single stock)
   const handleSearch = async (query: string) => {
     if (!query) return;
 
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/functions/v1/get-financial-data`, {
+      const res = await fetch(`${baseUrl}/functions/v1/get-stock`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ symbol: query })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: query }),
       });
       const data = await res.json();
-      if (data && data.ticker) {
+      if (data && data.symbol) {
         setStocks([data]);
       } else {
         setStocks([]);
       }
-      setSearchQuery(query); // << Important! Update searchQuery here
     } catch (error) {
       console.error('Error searching stock:', error);
       setStocks([]);
-      setSearchQuery(query); // << Important even on error
     }
     setLoading(false);
   };
@@ -96,7 +88,9 @@ const Stocks = () => {
           placeholder="Search by symbol (e.g., TSLA)"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              handleSearch(e.currentTarget.value.trim().toUpperCase());
+              const query = e.currentTarget.value.trim().toUpperCase();
+              setSearchQuery(query);
+              handleSearch(query);
             }
           }}
         />
@@ -110,24 +104,33 @@ const Stocks = () => {
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Symbol</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Sector</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Price</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">P/E</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Change</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Volume</th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Market Cap</th>
               </tr>
             </thead>
             <tbody>
               {stocks.map((stock) => (
                 <tr
-                  key={stock.ticker || stock.symbol}
+                  key={stock.symbol}
                   onClick={() => handleSelectStock(stock)}
                   className="cursor-pointer hover:bg-muted/50 border-b border-border transition-colors"
                 >
-                  <td className="px-4 py-4 font-medium">{stock.ticker || stock.symbol}</td>
-                  <td className="px-4 py-4 text-muted-foreground">{stock.sector || stock.industry || 'N/A'}</td>
+                  <td className="px-4 py-4 font-medium">{stock.symbol}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{stock.name || 'N/A'}</td>
                   <td className="px-4 py-4 text-right">${Number(stock.price || 0).toFixed(2)}</td>
-                  <td className="px-4 py-4 text-right">{Number(stock.pe_ratio || 0).toFixed(2)}</td>
-                  <td className="px-4 py-4 text-right">{formatMarketCap(stock.market_cap)}</td>
+                  <td
+                    className={`px-4 py-4 text-right ${
+                      stock.change_percent >= 0 ? 'text-green-500' : 'text-red-500'
+                    }`}
+                  >
+                    {stock.change >= 0 ? '+' : ''}
+                    {Number(stock.change).toFixed(2)} ({Number(stock.change_percent).toFixed(2)}%)
+                  </td>
+                  <td className="px-4 py-4 text-right">{stock.volume}</td>
+                  <td className="px-4 py-4 text-right">{stock.market_cap}</td>
                 </tr>
               ))}
             </tbody>
@@ -144,10 +147,3 @@ const Stocks = () => {
 
 export default Stocks;
 
-const formatMarketCap = (value: number | undefined) => {
-  if (!value) return 'N/A';
-  if (value > 1e12) return `${(value / 1e12).toFixed(2)}T`;
-  if (value > 1e9) return `${(value / 1e9).toFixed(2)}B`;
-  if (value > 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  return value.toString();
-};
