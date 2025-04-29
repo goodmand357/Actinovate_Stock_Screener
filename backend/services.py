@@ -33,7 +33,9 @@ def get_from_alpha_vantage(symbol):
             "eps_growth_yoy": float(overview_resp.get("QuarterlyEarningsGrowthYOY", 0)) or None,
             "revenue_growth_yoy": float(overview_resp.get("QuarterlyRevenueGrowthYOY", 0)) or None,
         }
-    except:
+        
+    except Exception as e:
+        print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
         return {}
 
 # ============================
@@ -60,7 +62,9 @@ def get_technical_indicators(symbol):
             "rsi": float(rsi.get(latest_date, {}).get("RSI", 0)) if latest_date else None,
             "momentum": float(momentum.get(latest_date, {}).get("MOM", 0)) if latest_date else None,
         }
-    except:
+    
+    except Exception as e:
+        print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
         return {}
 
 # ============================
@@ -107,9 +111,9 @@ def get_stock_data(symbol):
             "sma_20": None,
             "sma_50": None,
             "sma_200": info.get("twoHundredDayAverage"),
-            "balance_sheet": ticker.balance_sheet.to_dict(),
-            "financials": ticker.financials.to_dict(),
-            "cashflow": ticker.cashflow.to_dict(),
+            "balance_sheet": getattr(ticker, "balance_sheet", None).to_dict() if hasattr(ticker, "balance_sheet") else None,
+            "financials": getattr(ticker, "financials", None).to_dict() if hasattr(ticker, "financials") else None,
+            "cashflow": getattr(ticker, "cashflow", None).to_dict() if hasattr(ticker, "cashflow") else None,
             "officers": info.get("companyOfficers"),
         })
 
