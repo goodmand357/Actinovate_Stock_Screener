@@ -172,7 +172,7 @@ def smart_merge(*sources):
 # Final Aggregator
 # ============================
 def get_full_stock_data(symbol):
-    yahoo_data = get_from_yahoo(symbol)
+    yahoo_data = get_stock_data(symbol)  # <-- Fix here
     alpha_data = get_from_alpha_vantage(symbol)
     tech_data = get_technical_indicators(symbol)
     finnhub_data = get_from_finnhub(symbol)
