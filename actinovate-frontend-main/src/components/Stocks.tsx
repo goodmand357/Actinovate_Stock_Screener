@@ -81,13 +81,28 @@ const Stocks = () => {
     setLoading(false);
   };
 
-  const handleSelectStock = (stock: any) => {
-    setSelectedStock(stock);
+  const handleSelectStock = async (stock: any) => {
+    try {
+      const res = await fetch(`${functionsUrl}/get-financial-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify({ symbol: stock.symbol || stock.ticker })
+      });
+
+      const data = await res.json();
+      setSelectedStock(data);
+    } catch (err) {
+      console.error('Error loading stock detail:', err);
+    }
   };
 
   const handleBack = () => {
     setSelectedStock(null);
     fetchTopStocks();
+    setSearchQuery('');
   };
 
   if (selectedStock) {
@@ -122,6 +137,13 @@ const Stocks = () => {
         />
       </div>
 
+      {/* Trending Label */}
+      {!searchQuery && stocks.length > 0 && (
+        <h2 className="text-lg font-semibold mb-2 text-muted-foreground">
+          Trending Tickers
+        </h2>
+      )}
+
       {/* Loading / Error / List */}
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
@@ -137,4 +159,3 @@ const Stocks = () => {
 };
 
 export default Stocks;
-
