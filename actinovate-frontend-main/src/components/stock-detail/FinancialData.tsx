@@ -13,6 +13,14 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
     return typeof value === 'number' ? value.toFixed(digits) : 'N/A';
   };
 
+  const formatLargeNumber = (num: number | null) => {
+    if (typeof num !== 'number') return 'N/A';
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    return `$${num.toLocaleString()}`;
+  };
+
   return (
     <div className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
       <h3 className="text-xl font-bold mb-6 dark:text-white flex items-center gap-2">
@@ -25,9 +33,15 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
         <OverviewItem label="Price" value={`$${formatValue(stock.price)}`} />
         <OverviewItem label="Sector" value={stock.sector || 'N/A'} />
         <OverviewItem label="Industry" value={stock.industry || 'N/A'} />
-        <OverviewItem label="Founded" value={stock.foundedYear || 'N/A'} />
-        <OverviewItem label="Market Cap" value={stock.market_cap || 'N/A'} />
-        <OverviewItem label="Next Report" value={stock.nextReportDate || 'N/A'} />
+        <OverviewItem label="Founded" value={stock.founded || 'N/A'} />
+        <OverviewItem label="Market Cap" value={formatLargeNumber(stock.market_cap)} />
+        <OverviewItem label="Dividend Yield" value={stock.dividend_yield ? `${stock.dividend_yield}%` : 'N/A'} />
+        <OverviewItem label="P/E Ratio" value={formatValue(stock.pe_ratio)} />
+        <OverviewItem label="EPS" value={formatValue(stock.eps)} />
+        <OverviewItem label="YoY EPS Growth" value={stock.eps_growth_yoy ? `${(stock.eps_growth_yoy * 100).toFixed(2)}%` : 'N/A'} />
+        <OverviewItem label="Revenue" value={formatLargeNumber(stock.revenue)} />
+        <OverviewItem label="Net Profit" value={formatLargeNumber(stock.net_profit)} />
+        <OverviewItem label="Revenue Growth YoY" value={stock.revenue_growth_yoy ? `${(stock.revenue_growth_yoy * 100).toFixed(2)}%` : 'N/A'} />
       </Section>
 
       {stock.summary && (
