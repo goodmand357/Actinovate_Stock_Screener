@@ -3,7 +3,7 @@
 import React from 'react';
 
 interface Stock {
-  symbol: string;
+  ticker: string;
   name: string;
   price: number;
   change: number;
@@ -38,7 +38,7 @@ const StockList: React.FC<StockListProps> = ({ stocks, onSelect }) => {
               className="hover:bg-muted/20 cursor-pointer border-b border-border"
               onClick={() => onSelect(stock)}
             >
-              <td className="px-4 py-3 font-medium">{stock.symbol}</td>
+              <td className="px-4 py-3 font-medium">{stock.ticker}</td>
               <td className="px-4 py-3">{stock.name || 'N/A'}</td>
               <td className="px-4 py-3 text-right">${Number(stock.price).toFixed(2)}</td>
               <td
