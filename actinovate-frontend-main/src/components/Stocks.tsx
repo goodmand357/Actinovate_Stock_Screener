@@ -65,7 +65,17 @@ const Stocks = () => {
       const data = await res.json();
 
       if (data && (data.symbol || data.ticker)) {
-        setSelectedStock(data); // Go straight to detail view
+        // Apply basic defaults if key fields are missing
+        const safeData = {
+          ...data,
+          price: typeof data.price === 'number' ? data.price : 0,
+          change: typeof data.change === 'number' ? data.change : 0,
+          change_percent: typeof data.change_percent === 'number' ? data.change_percent : 0,
+          symbol: data.symbol || data.ticker || upperQuery,
+          name: data.name || 'Unknown Company',
+        };
+
+        setSelectedStock(safeData);
       } else {
         setStocks([]);
         setError(`No stock found for "${upperQuery}".`);
