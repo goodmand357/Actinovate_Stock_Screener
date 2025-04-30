@@ -6,6 +6,17 @@ interface FinancialDataProps {
   stock: any;
 }
 
+const formatNumber = (value: number): string => {
+  if (!value || isNaN(value)) return 'N/A';
+  if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`;
+  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
+  return value.toFixed(2);
+};
+
+const truncateText = (text: string, maxLength = 250): string =>
+  text.length > maxLength ? text.slice(0, maxLength) + '... Read more' : text;
+
 const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
   if (!stock) return <p>Loading financial data...</p>;
 
@@ -17,19 +28,27 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
       </h3>
 
       <Section title="Company Overview" icon={<Layers className="h-4 w-4 text-blue-400" />}>
-        <OverviewItem label="Ticker" value={stock.symbol} />
-        <OverviewItem label="Price" value={`$${stock.price?.toFixed(2)}`} />
+        <OverviewItem label="Ticker" value={stock.symbol || 'N/A'} />
+        <OverviewItem
+          label="Price"
+          value={stock.price ? `$${stock.price.toFixed(2)}` : 'N/A'}
+        />
         <OverviewItem label="Sector" value={stock.sector || 'N/A'} />
         <OverviewItem label="Industry" value={stock.industry || 'N/A'} />
         <OverviewItem label="Founded" value={stock.foundedYear || 'N/A'} />
-        <OverviewItem label="Market Cap" value={stock.marketCap || 'N/A'} />
+        <OverviewItem
+          label="Market Cap"
+          value={stock.market_cap ? formatNumber(stock.market_cap) : 'N/A'}
+        />
         <OverviewItem label="Next Report" value={stock.nextReportDate || 'N/A'} />
       </Section>
 
       {stock.summary && (
         <div className="mt-6">
           <h4 className="text-lg font-semibold mb-2 dark:text-white">Company Summary</h4>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{stock.summary}</p>
+          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            {truncateText(stock.summary)}
+          </p>
         </div>
       )}
     </div>
@@ -41,7 +60,7 @@ export default FinancialData;
 const Section = ({
   title,
   icon,
-  children
+  children,
 }: {
   title: string;
   icon: React.ReactNode;
