@@ -33,7 +33,7 @@ const Stocks = () => {
       });
       const data = await res.json();
       if (Array.isArray(data)) {
-        setStocks(data.slice(0, 5));
+        setStocks(data);
       } else {
         setStocks([]);
       }
@@ -48,7 +48,6 @@ const Stocks = () => {
   const handleSearch = async (query: string) => {
     if (!query) return;
     const upperQuery = query.trim().toUpperCase();
-    console.log("Searching for:", upperQuery);
 
     setLoading(true);
     setError(null);
@@ -64,10 +63,9 @@ const Stocks = () => {
       });
 
       const data = await res.json();
-      console.log('Search result:', data);
 
       if (data && (data.symbol || data.ticker)) {
-        setStocks([data]);
+        setSelectedStock(data); // Go straight to detail view
       } else {
         setStocks([]);
         setError(`No stock found for "${upperQuery}".`);
@@ -81,28 +79,13 @@ const Stocks = () => {
     setLoading(false);
   };
 
-  const handleSelectStock = async (stock: any) => {
-    try {
-      const res = await fetch(`${functionsUrl}/get-financial-data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify({ symbol: stock.symbol || stock.ticker })
-      });
-
-      const data = await res.json();
-      setSelectedStock(data);
-    } catch (err) {
-      console.error('Error loading stock detail:', err);
-    }
+  const handleSelectStock = (stock: any) => {
+    setSelectedStock(stock);
   };
 
   const handleBack = () => {
     setSelectedStock(null);
     fetchTopStocks();
-    setSearchQuery('');
   };
 
   if (selectedStock) {
@@ -137,20 +120,16 @@ const Stocks = () => {
         />
       </div>
 
-      {/* Trending Label */}
-      {!searchQuery && stocks.length > 0 && (
-        <h2 className="text-lg font-semibold mb-2 text-muted-foreground">
-          Trending Tickers
-        </h2>
-      )}
-
       {/* Loading / Error / List */}
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : stocks.length > 0 ? (
-        <StockList stocks={stocks} onSelect={handleSelectStock} />
+        <>
+          <p className="text-muted-foreground font-semibold mb-2">Trending Tickers</p>
+          <StockList stocks={stocks} onSelect={handleSelectStock} />
+        </>
       ) : (
         <p className="text-muted-foreground">No stocks to show.</p>
       )}
