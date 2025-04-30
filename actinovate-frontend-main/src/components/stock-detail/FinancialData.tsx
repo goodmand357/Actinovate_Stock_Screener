@@ -33,25 +33,35 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
         <OverviewItem label="Price" value={`$${formatValue(stock.price)}`} />
         <OverviewItem label="Sector" value={stock.sector || 'N/A'} />
         <OverviewItem label="Industry" value={stock.industry || 'N/A'} />
-        <OverviewItem label="Founded" value={stock.founded || 'N/A'} />
         <OverviewItem label="Market Cap" value={formatLargeNumber(stock.market_cap)} />
         <OverviewItem label="Dividend Yield" value={stock.dividend_yield ? `${stock.dividend_yield}%` : 'N/A'} />
         <OverviewItem label="P/E Ratio" value={formatValue(stock.pe_ratio)} />
         <OverviewItem label="EPS" value={formatValue(stock.eps)} />
         <OverviewItem label="YoY EPS Growth" value={stock.eps_growth_yoy ? `${(stock.eps_growth_yoy * 100).toFixed(2)}%` : 'N/A'} />
         <OverviewItem label="Revenue" value={formatLargeNumber(stock.revenue)} />
-        <OverviewItem label="Net Profit" value={formatLargeNumber(stock.net_profit)} />
-        <OverviewItem label="Revenue Growth YoY" value={stock.revenue_growth_yoy ? `${(stock.revenue_growth_yoy * 100).toFixed(2)}%` : 'N/A'} />
+        <OverviewItem
+          label="Net Profit"
+          value={
+            stock.net_profit != null
+              ? formatLargeNumber(stock.net_profit)
+              : stock.eps && stock.revenue
+              ? formatLargeNumber((stock.eps * stock.revenue) / 100)
+              : 'N/A'
+          }
+        />
+        <OverviewItem
+          label="Revenue Growth YoY"
+          value={stock.revenue_growth_yoy ? `${(stock.revenue_growth_yoy * 100).toFixed(2)}%` : 'N/A'}
+        />
+        <OverviewItem
+          label="Recommendation"
+          value={
+            stock.recommendation?.strongBuy != null && stock.recommendation?.period
+              ? `Buy: ${stock.recommendation.strongBuy}, Hold: ${stock.recommendation.hold}, Sell: ${stock.recommendation.sell}`
+              : 'N/A'
+          }
+        />
       </Section>
-
-      {stock.summary && (
-        <div className="mt-6">
-          <h4 className="text-lg font-semibold mb-2 dark:text-white">Company Summary</h4>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            {stock.summary}
-          </p>
-        </div>
-      )}
     </div>
   );
 };
