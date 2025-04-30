@@ -36,6 +36,7 @@ def get_from_alpha_vantage(symbol):
         
     except Exception as e:
         print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
+        traceback.print_exc()
         return {}
 
 # ============================
@@ -65,6 +66,7 @@ def get_technical_indicators(symbol):
     
     except Exception as e:
         print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
+        traceback.print_exc()
         return {}
 
 # ============================
@@ -121,6 +123,7 @@ def get_stock_data(symbol):
 
     except Exception as e:
         print(f"Error in get_from_yahoo for {symbol}: {e}")
+        traceback.print_exc()
         return {}
         
 # ============================
