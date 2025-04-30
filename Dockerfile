@@ -1,15 +1,15 @@
 # ---------- FRONTEND ----------
 FROM node:18 AS frontend
-WORKDIR /app/frontend
+WORKDIR /app
 COPY actinovate-frontend-main/package*.json ./
 RUN npm install
-COPY actinovate-frontend-main/ .
+COPY actinovate-frontend-main/ ./
 RUN npm run build
 
 # ---------- BACKEND ----------
 FROM python:3.11-slim AS backend
 
-# Add necessary build tools for lxml and other C dependencies
+# Build tools for lxml etc.
 RUN apt-get update && apt-get install -y \
     gcc \
     libxml2-dev \
@@ -19,10 +19,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY backend/ ./backend/
-COPY --from=frontend /app/frontend/dist ./frontend/build
-
-RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY backend/ ./
+COPY --from=frontend /app/dist ./frontend/build
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 CMD ["python", "app.py"]
