@@ -47,8 +47,12 @@ const Stocks = () => {
 
   const handleSearch = async (query: string) => {
     if (!query) return;
+    const upperQuery = query.trim().toUpperCase();
+    console.log("Searching for:", upperQuery);
+
     setLoading(true);
     setError(null);
+
     try {
       const res = await fetch(`${functionsUrl}/get-financial-data`, {
         method: 'POST',
@@ -56,21 +60,24 @@ const Stocks = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${supabaseAnonKey}`
         },
-        body: JSON.stringify({ symbol: query })
+        body: JSON.stringify({ symbol: upperQuery })
       });
+
       const data = await res.json();
-      console.log('Search result:', data); // Debug log
-      if (data && data.symbol) {
+      console.log('Search result:', data);
+
+      if (data && (data.symbol || data.ticker)) {
         setStocks([data]);
       } else {
         setStocks([]);
-        setError('No stock found.');
+        setError(`No stock found for "${upperQuery}".`);
       }
     } catch (err) {
       console.error('Error searching stock:', err);
       setError('Failed to search stock.');
       setStocks([]);
     }
+
     setLoading(false);
   };
 
@@ -106,11 +113,12 @@ const Stocks = () => {
           placeholder="Search by symbol (e.g., TSLA)"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              handleSearch(e.currentTarget.value.trim().toUpperCase());
+              handleSearch(e.currentTarget.value);
             }
           }}
           onChange={(e) => setSearchQuery(e.target.value)}
           value={searchQuery}
+          disabled={loading}
         />
       </div>
 
@@ -129,3 +137,4 @@ const Stocks = () => {
 };
 
 export default Stocks;
+
