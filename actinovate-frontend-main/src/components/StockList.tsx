@@ -1,15 +1,14 @@
 
-// src/components/StockList.tsx
 import React from 'react';
 
 interface Stock {
-  ticker: string;
+  symbol: string;
   name: string;
   price: number;
-  change: number;
-  change_percent: number;
-  volume: number;
-  market_cap: number;
+  change?: number;
+  change_percent?: number;
+  volume?: number;
+  market_cap?: number;
 }
 
 interface StockListProps {
@@ -38,16 +37,24 @@ const StockList: React.FC<StockListProps> = ({ stocks, onSelect }) => {
               className="hover:bg-muted/20 cursor-pointer border-b border-border"
               onClick={() => onSelect(stock)}
             >
-              <td className="px-4 py-3 font-medium">{stock.ticker}</td>
+              <td className="px-4 py-3 font-medium">{stock.symbol}</td>
               <td className="px-4 py-3">{stock.name || 'N/A'}</td>
-              <td className="px-4 py-3 text-right">${Number(stock.price).toFixed(2)}</td>
+              <td className="px-4 py-3 text-right">
+                {typeof stock.price === 'number' ? `$${stock.price.toFixed(2)}` : 'N/A'}
+              </td>
               <td
                 className={`px-4 py-3 text-right ${
-                  stock.change_percent >= 0 ? 'text-green-500' : 'text-red-500'
+                  (stock.change ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'
                 }`}
               >
-                {stock.change >= 0 ? '+' : ''}
-                {stock.change.toFixed(2)} ({stock.change_percent.toFixed(2)}%)
+                {typeof stock.change === 'number' && typeof stock.change_percent === 'number' ? (
+                  <>
+                    {stock.change >= 0 ? '+' : ''}
+                    {stock.change.toFixed(2)} ({stock.change_percent.toFixed(2)}%)
+                  </>
+                ) : (
+                  'N/A'
+                )}
               </td>
               <td className="px-4 py-3 text-right">{formatVolume(stock.volume)}</td>
               <td className="px-4 py-3 text-right">{formatMarketCap(stock.market_cap)}</td>
