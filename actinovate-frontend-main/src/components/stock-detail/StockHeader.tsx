@@ -8,7 +8,7 @@ interface StockHeaderProps {
     name?: string;
     price?: number;
     change?: number;
-    changePercent?: number;
+    change_percent?: number;
   };
   onBack: () => void;
 }
@@ -19,7 +19,7 @@ const StockHeader: React.FC<StockHeaderProps> = ({ stock, onBack }) => {
     name = 'Unknown Company',
     price = 0,
     change = 0,
-    changePercent = 0
+    change_percent = 0
   } = stock;
 
   const formatCurrency = (value: number) => {
@@ -56,12 +56,12 @@ const StockHeader: React.FC<StockHeaderProps> = ({ stock, onBack }) => {
         <div className="text-3xl font-bold dark:text-white">{formatCurrency(price)}</div>
         <div
           className={`${
-            changePercent >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+            change_percent >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
           } text-sm font-medium`}
         >
           {change >= 0 ? '+' : ''}
-          {change.toFixed(2)} ({changePercent >= 0 ? '+' : ''}
-          {changePercent.toFixed(2)}%)
+          {change.toFixed(2)} ({change_percent >= 0 ? '+' : ''}
+          {change_percent.toFixed(2)}%)
         </div>
       </div>
     </div>
