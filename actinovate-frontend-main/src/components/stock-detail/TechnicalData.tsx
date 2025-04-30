@@ -17,6 +17,11 @@ const TechnicalData: React.FC<TechnicalDataProps> = ({ stock }) => {
   const { technicals } = stock || {};
   if (!technicals) return <p>No technical data available.</p>;
 
+  const formatValue = (val: any) => {
+    if (val === null || val === undefined || isNaN(Number(val))) return 'N/A';
+    return typeof val === 'number' ? val.toFixed(2) : val;
+  };
+
   return (
     <div className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
       <h3 className="text-xl font-bold mb-6 dark:text-white flex items-center gap-2">
@@ -25,10 +30,10 @@ const TechnicalData: React.FC<TechnicalDataProps> = ({ stock }) => {
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-        <OverviewItem label="RSI" value={technicals.rsi ?? 'N/A'} />
-        <OverviewItem label="SMA 50" value={technicals.sma_50 ?? 'N/A'} />
-        <OverviewItem label="Momentum" value={technicals.momentum ?? 'N/A'} />
-        <OverviewItem label="Volatility (30D)" value={technicals.volatility ?? 'N/A'} />
+        <OverviewItem label="RSI" value={formatValue(technicals.rsi)} />
+        <OverviewItem label="SMA 50" value={formatValue(technicals.sma_50)} />
+        <OverviewItem label="Momentum" value={formatValue(technicals.momentum)} />
+        <OverviewItem label="Volatility (30D)" value={formatValue(technicals.volatility)} />
       </div>
     </div>
   );
