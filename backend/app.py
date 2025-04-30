@@ -3,10 +3,23 @@ from flask_cors import CORS
 from services import get_full_stock_data
 import os
 import yfinance as yf
+import pandas as pd
 from functools import lru_cache
 
 app = Flask(__name__, static_folder='../actinovate-frontend-main/dist', static_url_path='/')
 CORS(app)
+
+# ===========================
+# UTILITY: SANITIZE DATA
+# ===========================
+def convert_timestamps(obj):
+    if isinstance(obj, dict):
+        return {str(k): convert_timestamps(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_timestamps(item) for item in obj]
+    elif isinstance(obj, pd.Timestamp):
+        return str(obj)
+    return obj
 
 
 # ===========================
@@ -32,8 +45,9 @@ def ping():
 def cached_stock_data(symbol):
     return get_full_stock_data(symbol)
 
+
 # ===========================
-# API: MOCK PORTFOLIO DATA (Replace with DB later)
+# API: MOCK PORTFOLIO DATA
 # ===========================
 @app.route('/api/portfolio')
 def get_portfolio():
@@ -121,6 +135,7 @@ def get_portfolio():
         "summary": portfolio_summary
     })
 
+
 # ===========================
 # API: SINGLE STOCK DATA
 # ===========================
@@ -128,7 +143,8 @@ def get_portfolio():
 def financial_data():
     symbol = request.args.get('symbol', 'AAPL')
     data = cached_stock_data(symbol)
-    return jsonify(data)
+    cleaned_data = convert_timestamps(data)
+    return jsonify(cleaned_data)
 
 
 # ===========================
@@ -138,7 +154,7 @@ def financial_data():
 def stock_history(symbol):
     try:
         stock = yf.Ticker(symbol.upper())
-        hist = stock.history(period='6mo')  # You can adjust period (e.g. '1y', '5y')
+        hist = stock.history(period='6mo')
 
         result = [
             {"date": str(index.date()), "close": row['Close']}
@@ -170,7 +186,6 @@ def screener():
             rsi = data.get("rsi") or 0
 
             if (pe is not None and pe <= pe_max and div >= dividend_min and rsi <= rsi_max):
-                # Scoring logic (adjust as needed)
                 score = (
                     (1 / pe if pe > 0 else 0) * 0.4 +
                     div * 0.3 +
@@ -191,9 +206,7 @@ def screener():
             print(f"[❌] Error processing {symbol}: {e}")
             continue
 
-    # Sort by score descending
     results.sort(key=lambda x: x["score"], reverse=True)
-
     return jsonify(results)
 
 
@@ -203,3 +216,4 @@ def screener():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
