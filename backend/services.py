@@ -142,6 +142,24 @@ def get_stock_data(symbol):
             "officers": info.get("companyOfficers"),
         }
 
+        # Revenue Growth Calculations
+        revenue_growth = {}
+        try:
+            financials = stock.get("financials", {})
+            if financials:
+                revs = [(pd.to_datetime(date).year, report.get("Total Revenue")) for date, report in financials.items() if report.get("Total Revenue")]
+                revs.sort(reverse=True)
+                for i in range(1, min(4, len(revs))):
+                    prev = revs[i][1]
+                    curr = revs[i - 1][1]
+                    if prev:
+                        growth = ((curr - prev) / prev) * 100
+                        revenue_growth[f"revenue_growth_y{i}"] = round(growth, 2)
+        except Exception as e:
+            print("Error calculating YoY revenue growth:", e)
+
+        stock.update(revenue_growth)
+
         return stock
 
     except Exception as e:
