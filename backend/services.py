@@ -36,6 +36,10 @@ def get_from_alpha_vantage(symbol):
             "net_profit": float(overview_resp.get("NetIncomeTTM", 0)) or None,
             "eps_growth_yoy": float(overview_resp.get("QuarterlyEarningsGrowthYOY", 0)) or None,
             "revenue_growth_yoy": float(overview_resp.get("QuarterlyRevenueGrowthYOY", 0)) or None,
+            "price_to_sales": float(overview_resp.get("PriceToSalesTrailing12Months", 0)) or None,
+            "price_to_book": float(overview_resp.get("PriceToBook", 0)) or None,
+            "price_to_cash_flow": float(overview_resp.get("EnterpriseToEbitda", 0)) or None,
+            "beta": float(overview_resp.get("Beta", 0)) or None
         }
 
     except Exception as e:
@@ -83,13 +87,12 @@ def get_stock_data(symbol):
         fast_info = ticker.fast_info
         hist = ticker.history(period="5y")
 
-        # Feature Engineering
         hist['SMA_10'] = hist['Close'].rolling(window=10).mean()
         hist['SMA_50'] = hist['Close'].rolling(window=50).mean()
         hist['RSI'] = RSIIndicator(close=hist["Close"], window=14).rsi()
         hist['Momentum_5'] = hist['Close'].pct_change(5)
         hist['Volatility_20'] = hist['Close'].pct_change().rolling(20).std()
-        hist['Future_Return'] = hist['Close'].shift(-5) / hist['Close'] - 1  # Consider testing other horizons (e.g., 10-day)
+        hist['Future_Return'] = hist['Close'].shift(-5) / hist['Close'] - 1
         hist['Target'] = (hist['Future_Return'] > 0).astype(int)
         hist = hist.dropna()
 
@@ -106,6 +109,7 @@ def get_stock_data(symbol):
         previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
         change = price - previous_close if price and previous_close else 0
         percent_change = (change / previous_close * 100) if previous_close else 0
+        relative_volume = info.get("averageVolume10days") / info.get("averageVolume") if info.get("averageVolume") else None
 
         stock = {
             "ticker": symbol,
@@ -123,6 +127,7 @@ def get_stock_data(symbol):
             "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
             "eps": info.get("trailingEps"),
             "beta": info.get("beta"),
+            "relative_volume": relative_volume,
             "rsi": round(rsi, 2),
             "macd_signal": round(macd, 2),
             "momentum": round(momentum, 2),
@@ -202,6 +207,7 @@ def get_full_stock_data(symbol):
     tech_data = get_technical_indicators(symbol)
     finnhub_data = get_from_finnhub(symbol)
     polygon_data = get_from_polygon(symbol)
+    news_data = get_news_headlines(symbol)
 
     return smart_merge(
         yahoo_data,
@@ -209,7 +215,7 @@ def get_full_stock_data(symbol):
         tech_data,
         finnhub_data,
         polygon_data,
-        {"ticker": symbol.upper()}
+        {"ticker": symbol.upper(), "news": news_data}
     )
 
 # ============================
@@ -221,3 +227,4 @@ def get_news_headlines(symbol):
     except Exception as e:
         print(f"Error fetching news for {symbol}: {e}")
         return []
+
