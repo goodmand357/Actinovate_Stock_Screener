@@ -10,6 +10,15 @@ import pandas as pd
 import numpy as np
 
 # ============================
+# Helper for safe float conversion
+# ============================
+def safe_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+# ============================
 # Alpha Vantage as Primary Source
 # ============================
 def get_from_alpha_vantage(symbol):
@@ -25,21 +34,21 @@ def get_from_alpha_vantage(symbol):
         overview_resp = requests.get(overview_url).json()
 
         return {
-            "price": float(price) if price else None,
-            "pe_ratio": float(overview_resp.get("PERatio", 0)) or None,
-            "eps": float(overview_resp.get("EPS", 0)) or None,
-            "dividend_yield": float(overview_resp.get("DividendYield", 0)) or None,
+            "price": safe_float(price),
+            "pe_ratio": safe_float(overview_resp.get("PERatio")),
+            "eps": safe_float(overview_resp.get("EPS")),
+            "dividend_yield": safe_float(overview_resp.get("DividendYield")),
             "sector": overview_resp.get("Sector"),
             "industry": overview_resp.get("Industry"),
-            "market_cap": float(overview_resp.get("MarketCapitalization", 0)) or None,
-            "revenue": float(overview_resp.get("RevenueTTM", 0)) or None,
-            "net_profit": float(overview_resp.get("NetIncomeTTM", 0)) or None,
-            "eps_growth_yoy": float(overview_resp.get("QuarterlyEarningsGrowthYOY", 0)) or None,
-            "revenue_growth_yoy": float(overview_resp.get("QuarterlyRevenueGrowthYOY", 0)) or None,
-            "price_to_sales": float(overview_resp.get("PriceToSalesTrailing12Months", 0)) or None,
-            "price_to_book": float(overview_resp.get("PriceToBook", 0)) or None,
-            "price_to_cash_flow": float(overview_resp.get("EnterpriseToEbitda", 0)) or None,
-            "beta": float(overview_resp.get("Beta", 0)) or None
+            "market_cap": safe_float(overview_resp.get("MarketCapitalization")),
+            "revenue": safe_float(overview_resp.get("RevenueTTM")),
+            "net_profit": safe_float(overview_resp.get("NetIncomeTTM")),
+            "eps_growth_yoy": safe_float(overview_resp.get("QuarterlyEarningsGrowthYOY")),
+            "revenue_growth_yoy": safe_float(overview_resp.get("QuarterlyRevenueGrowthYOY")),
+            "price_to_sales": safe_float(overview_resp.get("PriceToSalesTrailing12Months")),
+            "price_to_book": safe_float(overview_resp.get("PriceToBook")),
+            "price_to_cash_flow": safe_float(overview_resp.get("EnterpriseToEbitda")),
+            "beta": safe_float(overview_resp.get("Beta"))
         }
 
     except Exception as e:
@@ -67,9 +76,9 @@ def get_technical_indicators(symbol):
         latest_date = next(iter(sma), None)
 
         return {
-            "sma_10": float(sma.get(latest_date, {}).get("SMA", 0)) if latest_date else None,
-            "rsi": float(rsi.get(latest_date, {}).get("RSI", 0)) if latest_date else None,
-            "momentum": float(momentum.get(latest_date, {}).get("MOM", 0)) if latest_date else None,
+            "sma_10": safe_float(sma.get(latest_date, {}).get("SMA")) if latest_date else None,
+            "rsi": safe_float(rsi.get(latest_date, {}).get("RSI")) if latest_date else None,
+            "momentum": safe_float(momentum.get(latest_date, {}).get("MOM")) if latest_date else None,
         }
 
     except Exception as e:
@@ -109,6 +118,7 @@ def get_stock_data(symbol):
         previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
         change = price - previous_close if price and previous_close else 0
         percent_change = (change / previous_close * 100) if previous_close else 0
+
         relative_volume = info.get("averageVolume10days") / info.get("averageVolume") if info.get("averageVolume") else None
 
         stock = {
@@ -141,24 +151,6 @@ def get_stock_data(symbol):
             "cashflow": getattr(ticker, "cashflow", None).to_dict() if hasattr(ticker, "cashflow") else None,
             "officers": info.get("companyOfficers"),
         }
-
-        # Revenue Growth Calculations
-        revenue_growth = {}
-        try:
-            financials = stock.get("financials", {})
-            if financials:
-                revs = [(pd.to_datetime(date).year, report.get("Total Revenue")) for date, report in financials.items() if report.get("Total Revenue")]
-                revs.sort(reverse=True)
-                for i in range(1, min(4, len(revs))):
-                    prev = revs[i][1]
-                    curr = revs[i - 1][1]
-                    if prev:
-                        growth = ((curr - prev) / prev) * 100
-                        revenue_growth[f"revenue_growth_y{i}"] = round(growth, 2)
-        except Exception as e:
-            print("Error calculating YoY revenue growth:", e)
-
-        stock.update(revenue_growth)
 
         return stock
 
@@ -245,4 +237,3 @@ def get_news_headlines(symbol):
     except Exception as e:
         print(f"Error fetching news for {symbol}: {e}")
         return []
-
