@@ -1,6 +1,12 @@
 
 import React from 'react';
-import { DollarSign, Layers } from 'lucide-react';
+import {
+  DollarSign,
+  Layers,
+  TrendingUp,
+  BarChart2,
+  PieChart
+} from 'lucide-react';
 
 interface FinancialDataProps {
   stock: any;
@@ -9,9 +15,8 @@ interface FinancialDataProps {
 const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
   if (!stock) return <p>Loading financial data...</p>;
 
-  const formatValue = (value: any, digits = 2) => {
-    return typeof value === 'number' ? value.toFixed(digits) : 'N/A';
-  };
+  const formatValue = (value: any, digits = 2) =>
+    typeof value === 'number' ? value.toFixed(digits) : 'N/A';
 
   const formatLargeNumber = (num: number | null) => {
     if (typeof num !== 'number') return 'N/A';
@@ -25,7 +30,7 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
     <div className="p-6 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
       <h3 className="text-xl font-bold mb-6 dark:text-white flex items-center gap-2">
         <DollarSign className="h-5 w-5 text-green-500" />
-        Financial Information for {stock.symbol}
+        Financial Information
       </h3>
 
       <Section title="Company Overview" icon={<Layers className="h-4 w-4 text-blue-400" />}>
@@ -36,31 +41,25 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
         <OverviewItem label="Market Cap" value={formatLargeNumber(stock.market_cap)} />
         <OverviewItem label="Dividend Yield" value={stock.dividend_yield ? `${stock.dividend_yield}%` : 'N/A'} />
         <OverviewItem label="P/E Ratio" value={formatValue(stock.pe_ratio)} />
-        <OverviewItem label="EPS" value={formatValue(stock.eps)} />
-        <OverviewItem label="YoY EPS Growth" value={stock.eps_growth_yoy ? `${(stock.eps_growth_yoy * 100).toFixed(2)}%` : 'N/A'} />
-        <OverviewItem label="Revenue" value={formatLargeNumber(stock.revenue)} />
-        <OverviewItem
-          label="Net Profit"
-          value={
-            stock.net_profit != null
-              ? formatLargeNumber(stock.net_profit)
-              : stock.eps && stock.revenue
-              ? formatLargeNumber((stock.eps * stock.revenue) / 100)
-              : 'N/A'
-          }
-        />
-        <OverviewItem
-          label="Revenue Growth YoY"
-          value={stock.revenue_growth_yoy ? `${(stock.revenue_growth_yoy * 100).toFixed(2)}%` : 'N/A'}
-        />
-        <OverviewItem
-          label="Recommendation"
-          value={
-            stock.recommendation?.strongBuy != null && stock.recommendation?.period
-              ? `Buy: ${stock.recommendation.strongBuy}, Hold: ${stock.recommendation.hold}, Sell: ${stock.recommendation.sell}`
-              : 'N/A'
-          }
-        />
+        <OverviewItem label="Basic EPS" value={formatValue(stock.eps)} />
+      </Section>
+
+      <Section title="Revenue & Profit" icon={<BarChart2 className="h-4 w-4 text-purple-400" />}>
+        <OverviewItem label="Revenue (TTM)" value={formatLargeNumber(stock.revenue)} />
+        <OverviewItem label="Net Profit" value={formatLargeNumber(stock.net_profit)} />
+        <OverviewItem label="Net Profit Margin" value={stock.net_profit && stock.revenue ? `${((stock.net_profit / stock.revenue) * 100).toFixed(1)}%` : 'N/A'} />
+        <OverviewItem label="EPS Growth YoY" value={stock.eps_growth_yoy ? `${(stock.eps_growth_yoy * 100).toFixed(1)}%` : 'N/A'} />
+      </Section>
+
+      <Section title="Growth Metrics" icon={<TrendingUp className="h-4 w-4 text-green-400" />}>
+        <OverviewItem label="Revenue Growth (YoY) - Y1" value={stock.revenue_growth_y1 ? `${stock.revenue_growth_y1}%` : 'N/A'} />
+        <OverviewItem label="Revenue Growth (YoY) - Y2" value={stock.revenue_growth_y2 ? `${stock.revenue_growth_y2}%` : 'N/A'} />
+        <OverviewItem label="Revenue Growth (YoY) - Y3" value={stock.revenue_growth_y3 ? `${stock.revenue_growth_y3}%` : 'N/A'} />
+      </Section>
+
+      <Section title="Investor Metrics" icon={<PieChart className="h-4 w-4 text-yellow-400" />}>
+        <OverviewItem label="Beta" value={formatValue(stock.beta)} />
+        <OverviewItem label="Relative Volume" value={formatValue(stock.relative_volume)} />
       </Section>
     </div>
   );
@@ -68,15 +67,7 @@ const FinancialData: React.FC<FinancialDataProps> = ({ stock }) => {
 
 export default FinancialData;
 
-const Section = ({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) => (
+const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
   <div className="mb-6">
     <h4 className="text-lg font-semibold mb-3 dark:text-white flex items-center gap-2">
       {icon} {title}
@@ -93,3 +84,4 @@ const OverviewItem = ({ label, value }: { label: string; value: string }) => (
     <p className="text-xl font-semibold dark:text-white">{value}</p>
   </div>
 );
+
