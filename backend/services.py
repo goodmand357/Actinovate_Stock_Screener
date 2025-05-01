@@ -9,18 +9,14 @@ from yahoo_fin import news
 import pandas as pd
 import numpy as np
 
-# ============================
-# Helper for safe float conversion
-# ============================
+
 def safe_float(value):
     try:
         return float(value)
     except (TypeError, ValueError):
         return None
 
-# ============================
-# Alpha Vantage as Primary Source
-# ============================
+
 def get_from_alpha_vantage(symbol):
     base_url = config.ALPHA_VANTAGE_BASE_URL
     api_key = config.ALPHA_VANTAGE_API_KEY
@@ -56,9 +52,7 @@ def get_from_alpha_vantage(symbol):
         traceback.print_exc()
         return {}
 
-# ============================
-# Technical Indicators from Alpha Vantage
-# ============================
+
 def get_technical_indicators(symbol):
     base_url = config.ALPHA_VANTAGE_BASE_URL
     api_key = config.ALPHA_VANTAGE_API_KEY
@@ -86,9 +80,7 @@ def get_technical_indicators(symbol):
         traceback.print_exc()
         return {}
 
-# ============================
-# Yahoo Finance Fallback
-# ============================
+
 def get_stock_data(symbol):
     try:
         ticker = yf.Ticker(symbol)
@@ -96,23 +88,45 @@ def get_stock_data(symbol):
         fast_info = ticker.fast_info
         hist = ticker.history(period="5y")
 
-        hist['SMA_10'] = hist['Close'].rolling(window=10).mean()
-        hist['SMA_50'] = hist['Close'].rolling(window=50).mean()
-        hist['RSI'] = RSIIndicator(close=hist["Close"], window=14).rsi()
-        hist['Momentum_5'] = hist['Close'].pct_change(5)
-        hist['Volatility_20'] = hist['Close'].pct_change().rolling(20).std()
-        hist['Future_Return'] = hist['Close'].shift(-5) / hist['Close'] - 1
-        hist['Target'] = (hist['Future_Return'] > 0).astype(int)
-        hist = hist.dropna()
+        rsi = None
+        if not hist.empty:
+            delta = hist['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            rsi = rsi.iloc[-1]
 
-        sma_10 = hist['SMA_10'].iloc[-1]
-        sma_20 = hist['Close'].rolling(window=20).mean().iloc[-1]
-        sma_50 = hist['SMA_50'].iloc[-1]
-        sma_200 = hist['Close'].rolling(window=200).mean().iloc[-1]
-        rsi = hist['RSI'].iloc[-1]
-        momentum = hist['Momentum_5'].iloc[-1] * 100
-        volatility_30d = hist['Volatility_20'].iloc[-1] * 100
-        macd = MACD(close=hist["Close"]).macd_signal().iloc[-1]
+        macd = None
+        macd_signal = None
+        if not hist.empty:
+            exp1 = hist['Close'].ewm(span=12, adjust=False).mean()
+            exp2 = hist['Close'].ewm(span=26, adjust=False).mean()
+            macd = exp1 - exp2
+            macd_signal = macd.ewm(span=9, adjust=False).mean()
+            macd = macd.iloc[-1]
+            macd_signal = macd_signal.iloc[-1]
+
+        momentum = None
+        if len(hist) >= 6:
+            momentum = ((hist['Close'].iloc[-1] - hist['Close'].iloc[-6]) / hist['Close'].iloc[-6]) * 100
+
+        volatility_30d = None
+        if len(hist) >= 30:
+            volatility_30d = hist['Close'].pct_change().rolling(window=30).std().iloc[-1] * 100
+
+        growth_metrics = {}
+        try:
+            financials = ticker.financials
+            revenues = financials.loc['Total Revenue']
+            available_years = revenues.index.year.tolist()
+            for i in range(1, min(4, len(revenues))):
+                prev_rev = revenues[i]
+                curr_rev = revenues[i - 1]
+                growth_rate = ((curr_rev - prev_rev) / prev_rev) * 100
+                growth_metrics[f"Revenue Growth YoY ({available_years[i - 1]} vs {available_years[i]})"] = round(growth_rate, 2)
+        except Exception as e:
+            growth_metrics = {}
 
         price = info.get("currentPrice") or fast_info.get("last_price")
         previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
@@ -121,47 +135,43 @@ def get_stock_data(symbol):
 
         relative_volume = info.get("averageVolume10days") / info.get("averageVolume") if info.get("averageVolume") else None
 
-        stock = {
+        return {
             "ticker": symbol,
             "name": info.get("longName") or info.get("shortName") or info.get("displayName") or "N/A",
             "price": round(price, 2) if price else None,
             "change": round(change, 2),
             "change_percent": round(percent_change, 2),
-            "volume": info.get("volume") or fast_info.get("volume") or 0,
-            "market_cap": info.get("marketCap") or fast_info.get("market_cap") or 0,
+            "market_cap": info.get("marketCap") or fast_info.get("market_cap"),
             "sector": info.get("sector"),
             "industry": info.get("industry"),
-            "summary": info.get("longBusinessSummary"),
-            "website": info.get("website"),
             "pe_ratio": info.get("trailingPE"),
             "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
             "eps": info.get("trailingEps"),
             "beta": info.get("beta"),
             "relative_volume": relative_volume,
-            "rsi": round(rsi, 2),
-            "macd_signal": round(macd, 2),
-            "momentum": round(momentum, 2),
-            "volatility_30d": round(volatility_30d, 2),
-            "sma_10": round(sma_10, 2),
-            "sma_20": round(sma_20, 2),
-            "sma_50": round(sma_50, 2),
-            "sma_200": round(sma_200, 2),
-            "balance_sheet": getattr(ticker, "balance_sheet", None).to_dict() if hasattr(ticker, "balance_sheet") else None,
-            "financials": getattr(ticker, "financials", None).to_dict() if hasattr(ticker, "financials") else None,
-            "cashflow": getattr(ticker, "cashflow", None).to_dict() if hasattr(ticker, "cashflow") else None,
-            "officers": info.get("companyOfficers"),
+            "rsi": round(rsi, 2) if rsi else None,
+            "macd": round(macd, 2) if macd else None,
+            "macd_signal": round(macd_signal, 2) if macd_signal else None,
+            "momentum": round(momentum, 2) if momentum else None,
+            "volatility_30d": round(volatility_30d, 2) if volatility_30d else None,
+            "gross_profits": info.get("grossProfits"),
+            "trailingPE": info.get("trailingPE"),
+            "forwardPE": info.get("forwardPE"),
+            "pegRatio": info.get("pegRatio"),
+            "priceToBook": info.get("priceToBook"),
+            "returnOnEquity": info.get("returnOnEquity"),
+            "totalRevenue": info.get("totalRevenue"),
+            "netIncomeToCommon": info.get("netIncomeToCommon"),
+            "profitMargins": round(info.get("profitMargins", 0) * 100, 2) if info.get("profitMargins") else None,
+            "growth_metrics": growth_metrics
         }
-
-        return stock
 
     except Exception as e:
         print(f"Error in get_stock_data for {symbol}: {e}")
         traceback.print_exc()
         return {}
 
-# ============================
-# Finnhub API fallback
-# ============================
+
 def get_from_finnhub(symbol):
     api_key = config.FINNHUB_API_KEY
     base_url = config.FINNHUB_BASE_URL
@@ -191,15 +201,11 @@ def get_from_finnhub(symbol):
         "recommendation": recommendation,
     }
 
-# ============================
-# Polygon API placeholder
-# ============================
+
 def get_from_polygon(symbol):
     return {}
 
-# ============================
-# Utility: Smart Merge
-# ============================
+
 def smart_merge(*sources):
     result = {}
     for source in sources:
@@ -208,9 +214,7 @@ def smart_merge(*sources):
                 result[k] = v
     return result
 
-# ============================
-# Final Aggregator
-# ============================
+
 def get_full_stock_data(symbol):
     yahoo_data = get_stock_data(symbol)
     alpha_data = get_from_alpha_vantage(symbol)
@@ -228,12 +232,11 @@ def get_full_stock_data(symbol):
         {"ticker": symbol.upper(), "news": news_data}
     )
 
-# ============================
-# News Headlines
-# ============================
+
 def get_news_headlines(symbol):
     try:
         return news.get_yf_rss(symbol)
     except Exception as e:
         print(f"Error fetching news for {symbol}: {e}")
         return []
+
