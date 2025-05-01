@@ -1,7 +1,13 @@
 from yahoo_scraper import scrape_yahoo_news
 import requests
 import yfinance as yf
+import traceback
 import config
+from ta.momentum import RSIIndicator
+from ta.trend import MACD
+from yahoo_fin import news
+import pandas as pd
+import numpy as np
 
 # ============================
 # Alpha Vantage as Primary Source
@@ -11,12 +17,10 @@ def get_from_alpha_vantage(symbol):
     api_key = config.ALPHA_VANTAGE_API_KEY
 
     try:
-        # Price
         price_url = f"{base_url}?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
         price_resp = requests.get(price_url).json()
         price = price_resp.get("Global Quote", {}).get("05. price")
 
-        # Overview
         overview_url = f"{base_url}?function=OVERVIEW&symbol={symbol}&apikey={api_key}"
         overview_resp = requests.get(overview_url).json()
 
@@ -33,7 +37,7 @@ def get_from_alpha_vantage(symbol):
             "eps_growth_yoy": float(overview_resp.get("QuarterlyEarningsGrowthYOY", 0)) or None,
             "revenue_growth_yoy": float(overview_resp.get("QuarterlyRevenueGrowthYOY", 0)) or None,
         }
-        
+
     except Exception as e:
         print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
         traceback.print_exc()
@@ -63,31 +67,46 @@ def get_technical_indicators(symbol):
             "rsi": float(rsi.get(latest_date, {}).get("RSI", 0)) if latest_date else None,
             "momentum": float(momentum.get(latest_date, {}).get("MOM", 0)) if latest_date else None,
         }
-    
+
     except Exception as e:
         print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
         traceback.print_exc()
         return {}
 
 # ============================
-# Fallback: Yahoo Finance via yfinance
+# Yahoo Finance Fallback
 # ============================
-import yfinance as yf
-
 def get_stock_data(symbol):
     try:
         ticker = yf.Ticker(symbol)
         info = ticker.info
         fast_info = ticker.fast_info
-        history = ticker.history(period="6mo")
+        hist = ticker.history(period="5y")
 
-        # Safe getters with fallbacks
+        # Feature Engineering
+        hist['SMA_10'] = hist['Close'].rolling(window=10).mean()
+        hist['SMA_50'] = hist['Close'].rolling(window=50).mean()
+        hist['RSI'] = RSIIndicator(close=hist["Close"], window=14).rsi()
+        hist['Momentum_5'] = hist['Close'].pct_change(5)
+        hist['Volatility_20'] = hist['Close'].pct_change().rolling(20).std()
+        hist['Future_Return'] = hist['Close'].shift(-5) / hist['Close'] - 1  # Consider testing other horizons (e.g., 10-day)
+        hist['Target'] = (hist['Future_Return'] > 0).astype(int)
+        hist = hist.dropna()
+
+        sma_10 = hist['SMA_10'].iloc[-1]
+        sma_20 = hist['Close'].rolling(window=20).mean().iloc[-1]
+        sma_50 = hist['SMA_50'].iloc[-1]
+        sma_200 = hist['Close'].rolling(window=200).mean().iloc[-1]
+        rsi = hist['RSI'].iloc[-1]
+        momentum = hist['Momentum_5'].iloc[-1] * 100
+        volatility_30d = hist['Volatility_20'].iloc[-1] * 100
+        macd = MACD(close=hist["Close"]).macd_signal().iloc[-1]
+
         price = info.get("currentPrice") or fast_info.get("last_price")
         previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
         change = price - previous_close if price and previous_close else 0
         percent_change = (change / previous_close * 100) if previous_close else 0
 
-        # Stocks tab fields
         stock = {
             "ticker": symbol,
             "name": info.get("longName") or info.get("shortName") or info.get("displayName") or "N/A",
@@ -96,36 +115,35 @@ def get_stock_data(symbol):
             "change_percent": round(percent_change, 2),
             "volume": info.get("volume") or fast_info.get("volume") or 0,
             "market_cap": info.get("marketCap") or fast_info.get("market_cap") or 0,
-        }
-
-        # Additional metrics for other tabs
-        stock.update({
             "sector": info.get("sector"),
             "industry": info.get("industry"),
             "summary": info.get("longBusinessSummary"),
             "website": info.get("website"),
-            "founded": info.get("firstTradeDateEpochUtc"),
             "pe_ratio": info.get("trailingPE"),
             "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
             "eps": info.get("trailingEps"),
-            "rsi": None,  # Add later if calculated manually
-            "sma_10": None,
-            "sma_20": None,
-            "sma_50": None,
-            "sma_200": info.get("twoHundredDayAverage"),
+            "beta": info.get("beta"),
+            "rsi": round(rsi, 2),
+            "macd_signal": round(macd, 2),
+            "momentum": round(momentum, 2),
+            "volatility_30d": round(volatility_30d, 2),
+            "sma_10": round(sma_10, 2),
+            "sma_20": round(sma_20, 2),
+            "sma_50": round(sma_50, 2),
+            "sma_200": round(sma_200, 2),
             "balance_sheet": getattr(ticker, "balance_sheet", None).to_dict() if hasattr(ticker, "balance_sheet") else None,
             "financials": getattr(ticker, "financials", None).to_dict() if hasattr(ticker, "financials") else None,
             "cashflow": getattr(ticker, "cashflow", None).to_dict() if hasattr(ticker, "cashflow") else None,
             "officers": info.get("companyOfficers"),
-        })
+        }
 
         return stock
 
     except Exception as e:
-        print(f"Error in get_from_yahoo for {symbol}: {e}")
+        print(f"Error in get_stock_data for {symbol}: {e}")
         traceback.print_exc()
         return {}
-        
+
 # ============================
 # Finnhub API fallback
 # ============================
@@ -142,14 +160,14 @@ def get_from_finnhub(symbol):
     try:
         eps_resp = requests.get(eps_trend_url).json()
         if isinstance(eps_resp, list):
-            eps_trend = eps_resp[:3]  # Limit to last 3 quarters
+            eps_trend = eps_resp[:3]
     except:
         pass
 
     try:
         rec_resp = requests.get(recommendation_url).json()
         if isinstance(rec_resp, list) and rec_resp:
-            recommendation = rec_resp[0]  # Latest
+            recommendation = rec_resp[0]
     except:
         pass
 
@@ -179,7 +197,7 @@ def smart_merge(*sources):
 # Final Aggregator
 # ============================
 def get_full_stock_data(symbol):
-    yahoo_data = get_stock_data(symbol)  # <-- Fix here
+    yahoo_data = get_stock_data(symbol)
     alpha_data = get_from_alpha_vantage(symbol)
     tech_data = get_technical_indicators(symbol)
     finnhub_data = get_from_finnhub(symbol)
@@ -193,3 +211,13 @@ def get_full_stock_data(symbol):
         polygon_data,
         {"ticker": symbol.upper()}
     )
+
+# ============================
+# News Headlines
+# ============================
+def get_news_headlines(symbol):
+    try:
+        return news.get_yf_rss(symbol)
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        return []
