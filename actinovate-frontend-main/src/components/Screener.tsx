@@ -22,10 +22,18 @@ interface Stock {
   industry?: string;
   price: number;
   change?: number;
-  changePercent?: number;
+  change_percent?: number;
   market_cap: number;
-  pe_ratio: number;
-  dividend_yield: number;
+  trailingPE?: number;
+  forwardPE?: number;
+  pegRatio?: number;
+  priceToBook?: number;
+  returnOnEquity?: number;
+  dividendYield?: number;
+  beta?: number;
+  eps?: number;
+  revenue?: number;
+  grossProfits?: number;
   net_profit?: number;
   net_profit_percent?: number;
 }
