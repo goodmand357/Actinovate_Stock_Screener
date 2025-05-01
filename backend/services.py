@@ -88,6 +88,14 @@ def get_stock_data(symbol):
         fast_info = ticker.fast_info
         hist = ticker.history(period="5y")
 
+        hist['SMA_10'] = hist['Close'].rolling(window=10).mean()
+        hist['SMA_50'] = hist['Close'].rolling(window=50).mean()
+
+        sma_10 = hist['SMA_10'].iloc[-1]
+        sma_20 = hist['Close'].rolling(window=20).mean().iloc[-1]
+        sma_50 = hist['SMA_50'].iloc[-1]
+        sma_200 = hist['Close'].rolling(window=200).mean().iloc[-1]
+
         rsi = None
         if not hist.empty:
             delta = hist['Close'].diff()
@@ -163,6 +171,16 @@ def get_stock_data(symbol):
             "totalRevenue": info.get("totalRevenue"),
             "netIncomeToCommon": info.get("netIncomeToCommon"),
             "profitMargins": round(info.get("profitMargins", 0) * 100, 2) if info.get("profitMargins") else None,
+            "sma_10": round(sma_10, 2),
+            "sma_20": round(sma_20, 2),
+            "sma_50": round(sma_50, 2),
+            "sma_200": round(sma_200, 2),
+            "balance_sheet": getattr(ticker, "balance_sheet", None).to_dict() if hasattr(ticker, "balance_sheet") else None,
+            "financials": getattr(ticker, "financials", None).to_dict() if hasattr(ticker, "financials") else None,
+            "cashflow": getattr(ticker, "cashflow", None).to_dict() if hasattr(ticker, "cashflow") else None,
+            "officers": info.get("companyOfficers"),
+            "summary": info.get("longBusinessSummary"),
+            "website": info.get("website"),
             "growth_metrics": growth_metrics
         }
 
