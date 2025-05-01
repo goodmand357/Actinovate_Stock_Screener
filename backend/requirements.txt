@@ -33,3 +33,4 @@ xgboost==2.0.3
 tensorflow==2.14.0
 matplotlib==3.8.4
 shap==0.45.0
+yahoo_fin==0.8.9.1
