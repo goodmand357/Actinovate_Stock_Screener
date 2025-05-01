@@ -62,6 +62,7 @@ const Screener = () => {
       if (filters.netProfitPercent) query.append('net_profit_percent', filters.netProfitPercent);
       if (filters.sector && filters.sector !== 'All') query.append('sector', filters.sector);
       if (filters.industry && filters.industry !== 'All') query.append('industry', filters.industry);
+      if (searchTerm.trim()) query.append('search', searchTerm.trim().toUpperCase());
 
       const res = await fetch(`${functionsUrl}/get-stocks?${query}`, {
         method: 'GET',
@@ -159,3 +160,4 @@ const Screener = () => {
 };
 
 export default Screener;
+
