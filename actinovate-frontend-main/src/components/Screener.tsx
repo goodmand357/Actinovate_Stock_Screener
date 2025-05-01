@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Download, ChevronDown, ChevronUp, Bell, Info
@@ -25,8 +26,8 @@ interface Stock {
   market_cap: number;
   pe_ratio: number;
   dividend_yield: number;
-  rsi: number;
-  score: number;
+  net_profit?: number;
+  net_profit_percent?: number;
 }
 
 const Screener = () => {
@@ -36,17 +37,18 @@ const Screener = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'market_cap', direction: 'desc' });
   const [alertedStocks, setAlertedStocks] = useState<string[]>([]);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
-  const [alertType, setAlertType] = useState<'price' | 'volume' | 'movement'>('price');
-  const [alertThreshold, setAlertThreshold] = useState('5');
-  const [alertFrequency, setAlertFrequency] = useState<'realtime' | 'daily' | 'weekly'>('realtime');
 
   const [filters, setFilters] = useState({
-    peMax: '40',
-    dividendMin: '0',
-    rsiMax: '80',
+    minPrice: '',
+    maxPrice: '',
     sector: 'All',
-    industry: 'All'
+    industry: 'All',
+    netProfit: '',
+    netProfitPercent: ''
   });
+
+  const [sectors, setSectors] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<string[]>([]);
 
   const fetchScreener = async () => {
     setLoading(true);
@@ -54,9 +56,10 @@ const Screener = () => {
       const query = new URLSearchParams();
       query.append("limit", "10");
       query.append("page", "1");
-      if (filters.peMax) query.append('pe_max', filters.peMax);
-      if (filters.dividendMin) query.append('dividend_min', filters.dividendMin);
-      if (filters.rsiMax) query.append('rsi_max', filters.rsiMax);
+      if (filters.minPrice) query.append('min_price', filters.minPrice);
+      if (filters.maxPrice) query.append('max_price', filters.maxPrice);
+      if (filters.netProfit) query.append('net_profit', filters.netProfit);
+      if (filters.netProfitPercent) query.append('net_profit_percent', filters.netProfitPercent);
       if (filters.sector && filters.sector !== 'All') query.append('sector', filters.sector);
       if (filters.industry && filters.industry !== 'All') query.append('industry', filters.industry);
 
@@ -69,6 +72,11 @@ const Screener = () => {
       });
       const data = await res.json();
       setStocks(data);
+
+      const allSectors = Array.from(new Set(data.map((s: Stock) => s.sector))).sort();
+      const allIndustries = Array.from(new Set(data.map((s: Stock) => s.industry))).sort();
+      setSectors(allSectors);
+      setIndustries(allIndustries);
     } catch (err) {
       console.error('Error loading screener data', err);
     } finally {
@@ -79,42 +87,6 @@ const Screener = () => {
   useEffect(() => {
     fetchScreener();
   }, []);
-
-  const handleSort = (key: keyof Stock) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-
-    const sorted = [...stocks].sort((a, b) => {
-      if (a[key]! < b[key]!) return direction === 'asc' ? -1 : 1;
-      if (a[key]! > b[key]!) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    setStocks(sorted);
-  };
-
-  const getSortIcon = (key: keyof Stock) => {
-    if (sortConfig.key !== key) return <ChevronDown className="h-4 w-4 opacity-50" />;
-    return sortConfig.direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
-  };
-
-  const toggleAlert = (symbol: string) => {
-    if (alertedStocks.includes(symbol)) {
-      setAlertedStocks(alertedStocks.filter(s => s !== symbol));
-      toast.success(`Alert removed for ${symbol}`);
-    } else {
-      setAlertedStocks([...alertedStocks, symbol]);
-      toast.success(`Alert set for ${symbol}`);
-    }
-  };
-
-  const toggleAlertsEnabled = () => {
-    setAlertsEnabled(!alertsEnabled);
-    toast.success(alertsEnabled ? 'Alerts disabled' : 'Alerts enabled');
-  };
 
   const formatMarketCap = (value: number) => {
     if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
@@ -135,21 +107,15 @@ const Screener = () => {
           />
           <Input
             type="number"
-            placeholder="Max P/E"
-            value={filters.peMax}
-            onChange={(e) => setFilters({ ...filters, peMax: e.target.value })}
+            placeholder="Min Price"
+            value={filters.minPrice}
+            onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
           />
           <Input
             type="number"
-            placeholder="Min Div Yield (%)"
-            value={filters.dividendMin}
-            onChange={(e) => setFilters({ ...filters, dividendMin: e.target.value })}
-          />
-          <Input
-            type="number"
-            placeholder="Max RSI"
-            value={filters.rsiMax}
-            onChange={(e) => setFilters({ ...filters, rsiMax: e.target.value })}
+            placeholder="Max Price"
+            value={filters.maxPrice}
+            onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
           />
           <select
             className="w-full px-3 py-2 rounded text-sm"
@@ -157,11 +123,9 @@ const Screener = () => {
             onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
           >
             <option value="All">All Sectors</option>
-            <option value="Technology">Technology</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Consumer Cyclical">Consumer Cyclical</option>
-            <option value="Financial Services">Financial Services</option>
-            <option value="Energy">Energy</option>
+            {sectors.map(sector => (
+              <option key={sector} value={sector}>{sector}</option>
+            ))}
           </select>
           <select
             className="w-full px-3 py-2 rounded text-sm"
@@ -169,12 +133,22 @@ const Screener = () => {
             onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
           >
             <option value="All">All Industries</option>
-            <option value="Software">Software</option>
-            <option value="Semiconductors">Semiconductors</option>
-            <option value="Biotechnology">Biotechnology</option>
-            <option value="Retail">Retail</option>
-            <option value="Oil & Gas">Oil & Gas</option>
+            {industries.map(ind => (
+              <option key={ind} value={ind}>{ind}</option>
+            ))}
           </select>
+          <Input
+            type="number"
+            placeholder="Enter Net Profit"
+            value={filters.netProfit}
+            onChange={(e) => setFilters({ ...filters, netProfit: e.target.value })}
+          />
+          <Input
+            type="number"
+            placeholder="Enter Net Profit %"
+            value={filters.netProfitPercent}
+            onChange={(e) => setFilters({ ...filters, netProfitPercent: e.target.value })}
+          />
           <Button onClick={fetchScreener} className="w-full">Apply Filters</Button>
         </div>
       </aside>
@@ -185,4 +159,3 @@ const Screener = () => {
 };
 
 export default Screener;
-
