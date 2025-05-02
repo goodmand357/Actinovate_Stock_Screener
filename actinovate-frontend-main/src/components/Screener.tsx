@@ -1,16 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Download, ChevronDown, ChevronUp, Bell, Info
+  Bell, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ChartWithControls from './ChartWithControls';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import {
-  Alert, AlertTitle, AlertDescription
-} from '@/components/ui/alert';
 
 const baseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -46,9 +42,6 @@ const Screener = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'market_cap', direction: 'desc' });
-  const [alertedStocks, setAlertedStocks] = useState<string[]>([]);
-  const [alertsEnabled, setAlertsEnabled] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
@@ -73,27 +66,23 @@ const Screener = () => {
       if (filters.maxPrice) query.append('max_price', filters.maxPrice);
       if (filters.netProfit) query.append('net_profit', filters.netProfit);
       if (filters.netProfitPercent) query.append('net_profit_percent', filters.netProfitPercent);
-      if (filters.sector && filters.sector !== 'All') query.append('sector', filters.sector);
-      if (filters.industry && filters.industry !== 'All') query.append('industry', filters.industry);
+      if (filters.sector !== 'All') query.append('sector', filters.sector);
+      if (filters.industry !== 'All') query.append('industry', filters.industry);
       if (searchTerm.trim()) query.append('search', searchTerm.trim().toUpperCase());
 
       const res = await fetch(`${functionsUrl}/get-stocks?${query}`, {
-        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${supabaseAnonKey}`
         }
       });
-
       const data = await res.json();
       setStocks(data);
 
-      const allSectors = Array.from(new Set(data.map((s: Stock) => s.sector))).sort();
-      const allIndustries = Array.from(new Set(data.map((s: Stock) => s.industry))).sort();
-      setSectors(allSectors);
-      setIndustries(allIndustries);
+      setSectors([...new Set(data.map((s: Stock) => s.sector))].sort());
+      setIndustries([...new Set(data.map((s: Stock) => s.industry))].sort());
     } catch (err) {
-      console.error('Error loading screener data', err);
+      console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -119,9 +108,7 @@ const Screener = () => {
             placeholder="Search Ticker"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') fetchScreener();
-            }}
+            onKeyDown={(e) => e.key === 'Enter' && fetchScreener()}
           />
           <Input type="number" placeholder="Min Price" value={filters.minPrice} onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })} />
           <Input type="number" placeholder="Max Price" value={filters.maxPrice} onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })} />
@@ -133,9 +120,9 @@ const Screener = () => {
             <option value="All">All Industries</option>
             {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
           </select>
-          <Input type="number" placeholder="Enter Net Profit" value={filters.netProfit} onChange={(e) => setFilters({ ...filters, netProfit: e.target.value })} />
-          <Input type="number" placeholder="Enter Net Profit %" value={filters.netProfitPercent} onChange={(e) => setFilters({ ...filters, netProfitPercent: e.target.value })} />
-          <Button onClick={fetchScreener} className="w-full">Apply Filters</Button>
+          <Input type="number" placeholder="Net Profit" value={filters.netProfit} onChange={(e) => setFilters({ ...filters, netProfit: e.target.value })} />
+          <Input type="number" placeholder="Net Profit %" value={filters.netProfitPercent} onChange={(e) => setFilters({ ...filters, netProfitPercent: e.target.value })} />
+          <Button className="w-full" onClick={fetchScreener}>Apply Filters</Button>
         </div>
       </aside>
 
@@ -179,23 +166,18 @@ const Screener = () => {
                   >
                     {stock.symbol}
                   </td>
-                  <td
-                    className={`py-2 px-4 text-right ${
-                      stock.change_percent !== undefined
-                        ? stock.change_percent > 0
-                          ? 'text-green-500'
-                          : stock.change_percent < 0
-                          ? 'text-red-500'
-                          : 'text-gray-500'
+                  <td className={`py-2 px-4 text-right ${
+                    stock.change_percent !== undefined
+                      ? stock.change_percent > 0
+                        ? 'text-green-500'
+                        : stock.change_percent < 0
+                        ? 'text-red-500'
                         : 'text-gray-500'
-                    }`}
-                  >
-                    {(typeof stock.change === 'number' && typeof stock.change_percent === 'number') ? (
-                      <>
-                        {stock.change > 0 ? '+' : ''}
-                        {stock.change.toFixed(2)} ({stock.change_percent.toFixed(2)}%)
-                      </>
-                    ) : 'N/A'}
+                      : 'text-gray-500'
+                  }`}>
+                    {(typeof stock.change === 'number' && typeof stock.change_percent === 'number')
+                      ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`
+                      : 'N/A'}
                   </td>
                   <td className="py-2 px-4">{formatMarketCap(stock.market_cap)}</td>
                   <td className="py-2 px-4">
@@ -204,18 +186,12 @@ const Screener = () => {
                       : (typeof stock.trailingPE === 'number' ? stock.trailingPE.toFixed(2) : 'N/A')}
                   </td>
                   <td className="py-2 px-4">
-                    {(typeof stock.dividend_yield === 'number' || typeof stock.dividendYield === 'number') ? (
-                      <>
-                        {(stock.dividend_yield ?? stock.dividendYield).toFixed(2)}%
-                      </>
-                    ) : 'N/A'}
+                    {(typeof stock.dividend_yield === 'number' || typeof stock.dividendYield === 'number')
+                      ? `${(stock.dividend_yield ?? stock.dividendYield).toFixed(2)}%`
+                      : 'N/A'}
                   </td>
                   <td className="py-2 px-4 text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedSymbol(stock.symbol)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedSymbol(stock.symbol)}>
                       <Bell className="w-4 h-4" />
                     </Button>
                   </td>
