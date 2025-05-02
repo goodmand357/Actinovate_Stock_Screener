@@ -109,60 +109,86 @@ const Screener = () => {
       <aside className="lg:col-span-1 space-y-4">
         <h2 className="text-lg font-semibold">Filters</h2>
         <div className="space-y-3">
-          <Input
-            placeholder="Search Ticker"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Input
-            type="number"
-            placeholder="Min Price"
-            value={filters.minPrice}
-            onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
-          />
-          <Input
-            type="number"
-            placeholder="Max Price"
-            value={filters.maxPrice}
-            onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-          />
-          <select
-            className="w-full px-3 py-2 rounded text-sm"
-            value={filters.sector}
-            onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
-          >
+          <Input placeholder="Search Ticker" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <Input type="number" placeholder="Min Price" value={filters.minPrice} onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })} />
+          <Input type="number" placeholder="Max Price" value={filters.maxPrice} onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })} />
+          <select className="w-full px-3 py-2 rounded text-sm" value={filters.sector} onChange={(e) => setFilters({ ...filters, sector: e.target.value })}>
             <option value="All">All Sectors</option>
-            {sectors.map(sector => (
-              <option key={sector} value={sector}>{sector}</option>
-            ))}
+            {sectors.map(sector => <option key={sector} value={sector}>{sector}</option>)}
           </select>
-          <select
-            className="w-full px-3 py-2 rounded text-sm"
-            value={filters.industry}
-            onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
-          >
+          <select className="w-full px-3 py-2 rounded text-sm" value={filters.industry} onChange={(e) => setFilters({ ...filters, industry: e.target.value })}>
             <option value="All">All Industries</option>
-            {industries.map(ind => (
-              <option key={ind} value={ind}>{ind}</option>
-            ))}
+            {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
           </select>
-          <Input
-            type="number"
-            placeholder="Enter Net Profit"
-            value={filters.netProfit}
-            onChange={(e) => setFilters({ ...filters, netProfit: e.target.value })}
-          />
-          <Input
-            type="number"
-            placeholder="Enter Net Profit %"
-            value={filters.netProfitPercent}
-            onChange={(e) => setFilters({ ...filters, netProfitPercent: e.target.value })}
-          />
+          <Input type="number" placeholder="Enter Net Profit" value={filters.netProfit} onChange={(e) => setFilters({ ...filters, netProfit: e.target.value })} />
+          <Input type="number" placeholder="Enter Net Profit %" value={filters.netProfitPercent} onChange={(e) => setFilters({ ...filters, netProfitPercent: e.target.value })} />
           <Button onClick={fetchScreener} className="w-full">Apply Filters</Button>
         </div>
       </aside>
-      {/* Main content remains unchanged */}
-      {/* ... */}
+
+      <section className="lg:col-span-4 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Stock Screener</h1>
+            <p className="text-sm text-muted-foreground">Live screener with dynamic filters</p>
+          </div>
+          <div className="space-x-2">
+            <Button variant="outline">Alerts Off</Button>
+            <Button variant="outline">Export</Button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="text-left border-b">
+                <th className="py-2 px-4">Symbol</th>
+                <th className="py-2 px-4">Name</th>
+                <th className="py-2 px-4">Sector</th>
+                <th className="py-2 px-4">Price</th>
+                <th className="py-2 px-4">Change %</th>
+                <th className="py-2 px-4">Market Cap</th>
+                <th className="py-2 px-4">P/E</th>
+                <th className="py-2 px-4">Div Yield</th>
+                <th className="py-2 px-4">Alert</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stocks.map(stock => (
+                <tr key={stock.symbol} className="border-b hover:bg-muted">
+                  <td className="py-2 px-4 font-medium">{stock.symbol}</td>
+                  <td className="py-2 px-4">{stock.name || 'N/A'}</td>
+                  <td className="py-2 px-4">{stock.sector}</td>
+                  <td className="py-2 px-4">${stock.price}</td>
+                  <td className="py-2 px-4">{stock.change_percent}%</td>
+                  <td className="py-2 px-4">{formatMarketCap(stock.market_cap)}</td>
+                  <td className="py-2 px-4">{stock.trailingPE || 'N/A'}</td>
+                  <td className="py-2 px-4">{stock.dividendYield || 'N/A'}</td>
+                  <td className="py-2 px-4 text-center">
+                    <Button variant="ghost" size="sm"><Bell className="w-4 h-4" /></Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Info className="w-4 h-4" /> AI Model Insights
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div className="bg-muted p-4 rounded-lg shadow">
+              <h4 className="text-base font-medium mb-1">Breakout Forecast</h4>
+              <p className="text-sm text-muted-foreground">Predicted breakout potential for selected stocks.</p>
+            </div>
+            <div className="bg-muted p-4 rounded-lg shadow">
+              <h4 className="text-base font-medium mb-1">Risk Score</h4>
+              <p className="text-sm text-muted-foreground">AI-based volatility and downside risk evaluation.</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
