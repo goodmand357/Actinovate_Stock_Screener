@@ -49,6 +49,7 @@ const Screener = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'market_cap', direction: 'desc' });
   const [alertedStocks, setAlertedStocks] = useState<string[]>([]);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
     minPrice: '',
@@ -61,7 +62,6 @@ const Screener = () => {
 
   const [sectors, setSectors] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const fetchScreener = async () => {
     setLoading(true);
@@ -84,6 +84,7 @@ const Screener = () => {
           'Authorization': `Bearer ${supabaseAnonKey}`
         }
       });
+
       const data = await res.json();
       setStocks(data);
 
@@ -114,8 +115,9 @@ const Screener = () => {
       <aside className="lg:col-span-1 space-y-4">
         <h2 className="text-lg font-semibold">Filters</h2>
         <div className="space-y-3">
-          <Input placeholder="Search Ticker" 
-            value={searchTerm} 
+          <Input
+            placeholder="Search Ticker"
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
             onKeyDown={(e) => {
               if (e.key === 'Enter') fetchScreener();
@@ -168,7 +170,6 @@ const Screener = () => {
               {stocks.map(stock => (
                 <tr key={stock.symbol} className="border-b hover:bg-muted">
                   <td className="py-2 px-4 font-medium">{stock.symbol}</td>
-                  
                   <td className="py-2 px-4">{stock.name || 'N/A'}</td>
                   <td className="py-2 px-4">{stock.sector || 'N/A'}</td>
                   <td className="py-2 px-4">${stock.price.toFixed(2)}</td>
@@ -178,6 +179,7 @@ const Screener = () => {
                   >
                     {stock.symbol}
                   </td>
+                  <td
                     className={`py-2 px-4 text-right ${
                       stock.change_percent !== undefined
                         ? stock.change_percent > 0
@@ -209,9 +211,9 @@ const Screener = () => {
                     ) : 'N/A'}
                   </td>
                   <td className="py-2 px-4 text-center">
-                    <Button 
-                      variant="ghost" 
-                      size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setSelectedSymbol(stock.symbol)}
                     >
                       <Bell className="w-4 h-4" />
@@ -221,13 +223,14 @@ const Screener = () => {
               ))}
             </tbody>
           </table>
-      
+
           {selectedSymbol && (
             <div className="mt-6">
               <ChartWithControls symbol={selectedSymbol} />
             </div>
           )}
-      
+        </div>
+
         <div className="mt-6">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Info className="w-4 h-4" /> AI Model Insights
@@ -249,4 +252,3 @@ const Screener = () => {
 };
 
 export default Screener;
-
