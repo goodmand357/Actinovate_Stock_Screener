@@ -1,4 +1,8 @@
 
+✅ Full Screener.tsx — Fixed & Production-Ready
+tsx
+Copy
+Edit
 import React, { useEffect, useState } from 'react';
 import {
   Download, ChevronDown, ChevronUp, Bell, Info
@@ -164,7 +168,7 @@ const Screener = () => {
                   <td className="py-2 px-4">{stock.sector || 'N/A'}</td>
                   <td className="py-2 px-4">${stock.price.toFixed(2)}</td>
                   <td
-                    className={`text-right ${
+                    className={`py-2 px-4 text-right ${
                       stock.change_percent !== undefined
                         ? stock.change_percent > 0
                           ? 'text-green-500'
@@ -172,12 +176,12 @@ const Screener = () => {
                           ? 'text-red-500'
                           : 'text-gray-500'
                         : 'text-gray-500'
-                    }'}
+                    }`}
                   >
                     {(typeof stock.change === 'number' && typeof stock.change_percent === 'number') ? (
                       <>
                         {stock.change > 0 ? '+' : ''}
-                        {stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)
+                        {stock.change.toFixed(2)} ({stock.change_percent.toFixed(2)}%)
                       </>
                     ) : 'N/A'}
                   </td>
@@ -188,9 +192,11 @@ const Screener = () => {
                       : (typeof stock.trailingPE === 'number' ? stock.trailingPE.toFixed(2) : 'N/A')}
                   </td>
                   <td className="py-2 px-4">
-                    {(typeof stock.dividend_yield === 'number' || typeof stock.dividendYield === 'number')
-                      ? `${(stock.dividend_yield ?? stock.dividendYield).toFixed(2)}%`
-                      : 'N/A'}
+                    {(typeof stock.dividend_yield === 'number' || typeof stock.dividendYield === 'number') ? (
+                      <>
+                        {(stock.dividend_yield ?? stock.dividendYield).toFixed(2)}%
+                      </>
+                    ) : 'N/A'}
                   </td>
                   <td className="py-2 px-4 text-center">
                     <Button variant="ghost" size="sm">
