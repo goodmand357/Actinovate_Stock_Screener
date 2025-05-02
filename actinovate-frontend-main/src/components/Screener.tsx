@@ -32,6 +32,7 @@ interface Stock {
   priceToBook?: number;
   returnOnEquity?: number;
   dividendYield?: number;
+  dividend_yield?: number;
   beta?: number;
   eps?: number;
   revenue?: number;
@@ -148,7 +149,7 @@ const Screener = () => {
                 <th className="py-2 px-4">Name</th>
                 <th className="py-2 px-4">Sector</th>
                 <th className="py-2 px-4">Price</th>
-                <th className="py-2 px-4">Change</th> {/* Instead of % */}
+                <th className="py-2 px-4">Change</th>
                 <th className="py-2 px-4">Market Cap</th>
                 <th className="py-2 px-4">P/E</th>
                 <th className="py-2 px-4">Div Yield</th>
@@ -160,14 +161,28 @@ const Screener = () => {
                 <tr key={stock.symbol} className="border-b hover:bg-muted">
                   <td className="py-2 px-4 font-medium">{stock.symbol}</td>
                   <td className="py-2 px-4">{stock.name || 'N/A'}</td>
-                  <td className="py-2 px-4">{stock.sector}</td>
-                  <td className="py-2 px-4">${stock.price}</td>
-                  <td className="py-2 px-4">{stock.change && stock.change_percent? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`: 'N/A'}</td>
+                  <td className="py-2 px-4">{stock.sector || 'N/A'}</td>
+                  <td className="py-2 px-4">${stock.price.toFixed(2)}</td>
+                  <td className="py-2 px-4">
+                    {(typeof stock.change === 'number' && typeof stock.change_percent === 'number')
+                      ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`
+                      : 'N/A'}
+                  </td>
                   <td className="py-2 px-4">{formatMarketCap(stock.market_cap)}</td>
-                  <td className="py-2 px-4">{stock.trailingPE || 'N/A'}</td>
-                  <td className="py-2 px-4">{stock.dividendYield || stock.dividendYield}? `${(stock.dividend_yield || stock.dividendYield).toFixed(2)}%: 'N/A'}</td>
+                  <td className="py-2 px-4">
+                    {typeof stock.pe_ratio === 'number'
+                      ? stock.pe_ratio.toFixed(2)
+                      : (typeof stock.trailingPE === 'number' ? stock.trailingPE.toFixed(2) : 'N/A')}
+                  </td>
+                  <td className="py-2 px-4">
+                    {(typeof stock.dividend_yield === 'number' || typeof stock.dividendYield === 'number')
+                      ? `${(stock.dividend_yield ?? stock.dividendYield).toFixed(2)}%`
+                      : 'N/A'}
+                  </td>
                   <td className="py-2 px-4 text-center">
-                    <Button variant="ghost" size="sm"><Bell className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm">
+                      <Bell className="w-4 h-4" />
+                    </Button>
                   </td>
                 </tr>
               ))}
