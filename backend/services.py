@@ -154,7 +154,7 @@ def get_stock_data(symbol):
 
         relative_volume = info.get("averageVolume10days") / info.get("averageVolume") if info.get("averageVolume") else None
 
-        stock = {
+        return {
             "ticker": symbol,
             "name": info.get("longName") or info.get("shortName") or info.get("displayName") or "N/A",
             "price": round(price, 2) if price else None,
