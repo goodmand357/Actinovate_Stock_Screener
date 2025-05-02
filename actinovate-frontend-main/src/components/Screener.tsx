@@ -24,6 +24,8 @@ interface Stock {
   change?: number;
   change_percent?: number;
   market_cap: number;
+  volume?: number;
+  pe_ratio?: number;
   trailingPE?: number;
   forwardPE?: number;
   pegRatio?: number;
@@ -146,7 +148,7 @@ const Screener = () => {
                 <th className="py-2 px-4">Name</th>
                 <th className="py-2 px-4">Sector</th>
                 <th className="py-2 px-4">Price</th>
-                <th className="py-2 px-4">Change %</th>
+                <th className="py-2 px-4">Change</th> {/* Instead of % */}
                 <th className="py-2 px-4">Market Cap</th>
                 <th className="py-2 px-4">P/E</th>
                 <th className="py-2 px-4">Div Yield</th>
@@ -160,10 +162,10 @@ const Screener = () => {
                   <td className="py-2 px-4">{stock.name || 'N/A'}</td>
                   <td className="py-2 px-4">{stock.sector}</td>
                   <td className="py-2 px-4">${stock.price}</td>
-                  <td className="py-2 px-4">{stock.change_percent}%</td>
+                  <td className="py-2 px-4">{stock.change && stock.change_percent? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`: 'N/A'}</td>
                   <td className="py-2 px-4">{formatMarketCap(stock.market_cap)}</td>
                   <td className="py-2 px-4">{stock.trailingPE || 'N/A'}</td>
-                  <td className="py-2 px-4">{stock.dividendYield || 'N/A'}</td>
+                  <td className="py-2 px-4">{stock.dividendYield || stock.dividendYield}? `${(stock.dividend_yield || stock.dividendYield).toFixed(2)}%: 'N/A'}</td>
                   <td className="py-2 px-4 text-center">
                     <Button variant="ghost" size="sm"><Bell className="w-4 h-4" /></Button>
                   </td>
