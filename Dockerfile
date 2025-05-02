@@ -20,24 +20,24 @@ RUN npm run build
 # ---------- BACKEND ----------
 FROM python:3.10-slim AS backend
 
-# Set backend workdir
 WORKDIR /backend
 
-# Install system dependencies (if needed)
-RUN apt-get update && apt-get install -y gcc
+# Install system dependencies to build wheels
+RUN apt-get update && apt-get install -y gcc build-essential
 
-# Install Python dependencies
+# Use a virtual environment to keep things clean
+RUN python -m venv venv
+ENV PATH="/backend/venv/bin:$PATH"
+
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source
+# 🧠 FIX: Avoid memory overload with limited pip cache
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
 COPY backend/ .
 
-# Copy built frontend into backend (if used by Flask etc)
 COPY --from=frontend /app/dist ./frontend/build
 
-# Expose port (adjust if needed)
 EXPOSE 5000
-
-# Start the backend server
 CMD ["python", "app.py"]
