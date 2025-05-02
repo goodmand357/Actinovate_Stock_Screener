@@ -9,6 +9,9 @@ from yahoo_fin import news
 import pandas as pd
 import numpy as np
 
+# ============================
+# Alpha Vantage as Primary Source
+# ============================
 
 def safe_float(value):
     try:
@@ -22,10 +25,12 @@ def get_from_alpha_vantage(symbol):
     api_key = config.ALPHA_VANTAGE_API_KEY
 
     try:
+        # Price
         price_url = f"{base_url}?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
         price_resp = requests.get(price_url).json()
         price = price_resp.get("Global Quote", {}).get("05. price")
 
+        # Overview
         overview_url = f"{base_url}?function=OVERVIEW&symbol={symbol}&apikey={api_key}"
         overview_resp = requests.get(overview_url).json()
 
@@ -52,7 +57,9 @@ def get_from_alpha_vantage(symbol):
         traceback.print_exc()
         return {}
 
-
+# ============================
+# Technical Indicators from Alpha Vantage
+# ============================
 def get_technical_indicators(symbol):
     base_url = config.ALPHA_VANTAGE_BASE_URL
     api_key = config.ALPHA_VANTAGE_API_KEY
@@ -79,7 +86,10 @@ def get_technical_indicators(symbol):
         print(f"[AlphaVantage] Failed to fetch {symbol}: {e}")
         traceback.print_exc()
         return {}
-
+# ============================
+# Fallback: Yahoo Finance via yfinance
+# ============================
+import yfinance as yf
 
 def get_stock_data(symbol):
     try:
@@ -136,6 +146,7 @@ def get_stock_data(symbol):
         except Exception as e:
             growth_metrics = {}
 
+        # Safe getters with fallbacks
         price = info.get("currentPrice") or fast_info.get("last_price")
         previous_close = info.get("previousClose") or fast_info.get("previous_close", 0)
         change = price - previous_close if price and previous_close else 0
@@ -143,33 +154,33 @@ def get_stock_data(symbol):
 
         relative_volume = info.get("averageVolume10days") / info.get("averageVolume") if info.get("averageVolume") else None
 
-        return {
+        stock = {
             "ticker": symbol,
             "name": info.get("longName") or info.get("shortName") or info.get("displayName") or "N/A",
             "price": round(price, 2) if price else None,
             "change": round(change, 2),
             "change_percent": round(percent_change, 2),
-            "market_cap": ticker.info.get("marketCap") or fast_info.get("market_cap"),
-            "sector": ticker.info.get("sector"),
-            "industry": ticker.info.get("industry"),
-            "pe_ratio": ticker.info.get("trailingPE"),
+            "market_cap": info.get("marketCap") or fast_info.get("market_cap"),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "pe_ratio": info.get("trailingPE"),
             "dividend_yield": round(ticker.info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
-            "eps": ticker.info.get("trailingEps"),
-            "beta": ticker.info.get("beta"),
+            "eps": info.get("trailingEps"),
+            "beta": info.get("beta"),
             "relative_volume": relative_volume,
             "rsi": round(rsi, 2) if rsi else None,
             "macd": round(macd, 2) if macd else None,
             "macd_signal": round(macd_signal, 2) if macd_signal else None,
             "momentum": round(momentum, 2) if momentum else None,
             "volatility_30d": round(volatility_30d, 2) if volatility_30d else None,
-            "gross_profits": ticker.info.get("grossProfits"),
-            "trailingPE": ticker.info.get("trailingPE"),
-            "forwardPE": ticker.info.get("forwardPE"),
-            "pegRatio": ticker.info.get("pegRatio"),
-            "priceToBook": ticker.info.get("priceToBook"),
-            "returnOnEquity": ticker.info.get("returnOnEquity"),
-            "totalRevenue": ticker.info.get("totalRevenue"),
-            "netIncomeToCommon": ticker.info.get("netIncomeToCommon"),
+            "gross_profits": info.get("grossProfits"),
+            "trailingPE": info.get("trailingPE"),
+            "forwardPE": info.get("forwardPE"),
+            "pegRatio": info.get("pegRatio"),
+            "priceToBook": info.get("priceToBook"),
+            "returnOnEquity": info.get("returnOnEquity"),
+            "totalRevenue": info.get("totalRevenue"),
+            "netIncomeToCommon": info.get("netIncomeToCommon"),
             "profitMargins": round(ticker.info.get("profitMargins", 0) * 100, 2) if info.get("profitMargins") else None,
             "sma_10": round(sma_10, 2),
             "sma_20": round(sma_20, 2),
