@@ -163,7 +163,17 @@ const Screener = () => {
                   <td className="py-2 px-4">{stock.name || 'N/A'}</td>
                   <td className="py-2 px-4">{stock.sector || 'N/A'}</td>
                   <td className="py-2 px-4">${stock.price.toFixed(2)}</td>
-                  <td className="py-2 px-4">
+                  <td
+                    className={`text-right ${
+                      stock.change_percent !== undefined
+                        ? stock.change_percent > 0
+                          ? 'text-green-500'
+                          : stock.change_percent < 0
+                          ? 'text-red-500'
+                          : 'text-gray-500'
+                        : 'text-gray-500'
+                    }'}
+                  >
                     {(typeof stock.change === 'number' && typeof stock.change_percent === 'number')
                       ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`
                       : 'N/A'}
