@@ -174,9 +174,12 @@ const Screener = () => {
                         : 'text-gray-500'
                     }'}
                   >
-                    {(typeof stock.change === 'number' && typeof stock.change_percent === 'number')
-                      ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)`
-                      : 'N/A'}
+                    {(typeof stock.change === 'number' && typeof stock.change_percent === 'number') ? (
+                      <>
+                        {stock.change > 0 ? '+' : ''}
+                        {stock.change.toFixed(2)} (${stock.change_percent.toFixed(2)}%)
+                      </>
+                    ) : 'N/A'}
                   </td>
                   <td className="py-2 px-4">{formatMarketCap(stock.market_cap)}</td>
                   <td className="py-2 px-4">
