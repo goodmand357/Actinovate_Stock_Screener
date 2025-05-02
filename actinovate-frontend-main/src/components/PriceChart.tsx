@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
+const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const functionsUrl = `${baseUrl}/functions/v1`;
+
 interface Props {
   symbol: string;
   period?: string;
