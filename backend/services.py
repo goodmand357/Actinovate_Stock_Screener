@@ -125,6 +125,7 @@ def get_stock_data(symbol):
 
         growth_metrics = {}
         try:
+            info = ticker.info
             financials = ticker.financials
             revenues = financials.loc['Total Revenue']
             available_years = revenues.index.year.tolist()
