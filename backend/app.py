@@ -5,6 +5,7 @@ import os
 import yfinance as yf
 import pandas as pd
 from functools import lru_cache
+from ml_models import fetch_data, train_random_forest
 
 app = Flask(__name__, static_folder='../actinovate-frontend-main/dist', static_url_path='/')
 CORS(app)
@@ -152,9 +153,16 @@ def financial_data():
 # ===========================
 @app.route('/api/history/<symbol>')
 def stock_history(symbol):
+    period = request.args.get("period", "5y")  # default to 5y
+
+    # Optional: Validate period input
+    valid_periods = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"}
+    if period not in valid_periods:
+        return jsonify({"error": "Invalid period"}), 400
+
     try:
         stock = yf.Ticker(symbol.upper())
-        hist = stock.history(period='6mo')
+        hist = stock.history(period=period)
 
         result = [
             {"date": str(index.date()), "close": row['Close']}
