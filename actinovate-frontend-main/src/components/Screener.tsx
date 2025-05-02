@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ChartWithControls from './ChartWithControls';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -60,6 +61,7 @@ const Screener = () => {
 
   const [sectors, setSectors] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const fetchScreener = async () => {
     setLoading(true);
@@ -166,10 +168,16 @@ const Screener = () => {
               {stocks.map(stock => (
                 <tr key={stock.symbol} className="border-b hover:bg-muted">
                   <td className="py-2 px-4 font-medium">{stock.symbol}</td>
+                  
                   <td className="py-2 px-4">{stock.name || 'N/A'}</td>
                   <td className="py-2 px-4">{stock.sector || 'N/A'}</td>
                   <td className="py-2 px-4">${stock.price.toFixed(2)}</td>
                   <td
+                    className="py-2 px-4 font-medium text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => setSelectedSymbol(stock.symbol)}
+                  >
+                    {stock.symbol}
+                  </td>
                     className={`py-2 px-4 text-right ${
                       stock.change_percent !== undefined
                         ? stock.change_percent > 0
@@ -209,8 +217,13 @@ const Screener = () => {
               ))}
             </tbody>
           </table>
-        </div>
-
+      
+          {selectedSymbol && (
+            <div className="mt-6">
+              <ChartWithControls symbol={selectedSymbol} />
+            </div>
+          )}
+      
         <div className="mt-6">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Info className="w-4 h-4" /> AI Model Insights
