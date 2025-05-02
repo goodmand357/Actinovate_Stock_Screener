@@ -2,41 +2,45 @@
 FROM node:18 AS frontend
 WORKDIR /app
 
-# Install dependencies
+# Install deps and build
 COPY actinovate-frontend-main/package*.json ./
 RUN npm install
-
-# Copy source and build
 COPY actinovate-frontend-main/ ./
 RUN npm run build
 
 # ---------- BACKEND ----------
 FROM python:3.11-slim AS backend
 
-# Avoid prompts + install system deps
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install required system libs for pandas, sklearn, shap, lxml, etc
 RUN apt-get update && apt-get install -y \
+    build-essential \
     gcc \
+    g++ \
     libxml2-dev \
     libxslt1-dev \
-    build-essential \
+    libffi-dev \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    git \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy backend code
+# Backend code
 COPY backend/ ./
 
-# Copy built frontend
+# Include frontend build
 COPY --from=frontend /app/dist ./frontend/build
 
-# Install Python dependencies
+# Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Expose backend port
 EXPOSE 5000
 
-# Run backend app
 CMD ["python", "app.py"]
