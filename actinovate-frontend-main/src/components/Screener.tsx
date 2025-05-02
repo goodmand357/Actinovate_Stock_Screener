@@ -209,7 +209,11 @@ const Screener = () => {
                     ) : 'N/A'}
                   </td>
                   <td className="py-2 px-4 text-center">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm">
+                      onClick={() => setSelectedSymbol(stock.symbol)}
+                    >
                       <Bell className="w-4 h-4" />
                     </Button>
                   </td>
