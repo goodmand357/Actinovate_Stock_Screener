@@ -112,7 +112,13 @@ const Screener = () => {
       <aside className="lg:col-span-1 space-y-4">
         <h2 className="text-lg font-semibold">Filters</h2>
         <div className="space-y-3">
-          <Input placeholder="Search Ticker" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <Input placeholder="Search Ticker" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') fetchScreener();
+            }}
+          />
           <Input type="number" placeholder="Min Price" value={filters.minPrice} onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })} />
           <Input type="number" placeholder="Max Price" value={filters.maxPrice} onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })} />
           <select className="w-full px-3 py-2 rounded text-sm" value={filters.sector} onChange={(e) => setFilters({ ...filters, sector: e.target.value })}>
