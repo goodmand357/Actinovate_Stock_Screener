@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import PriceChart from './PriceChart';
 
+const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const functionsUrl = `${baseUrl}/functions/v1`;
+
 interface Props {
   symbol: string;
 }
