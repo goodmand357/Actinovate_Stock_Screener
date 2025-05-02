@@ -1,8 +1,4 @@
 
-✅ Full Screener.tsx — Fixed & Production-Ready
-tsx
-Copy
-Edit
 import React, { useEffect, useState } from 'react';
 import {
   Download, ChevronDown, ChevronUp, Bell, Info
